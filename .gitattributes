@@ -1,0 +1,8 @@
+# normalize by default
+* text=auto encoding=UTF-8
+*.sh text eol=lf
+
+# These are windows specific files which we may as well ensure are
+# always crlf on checkout
+*.bat text eol=crlf
+*.cmd text eol=crlf
