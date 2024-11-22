@@ -29,21 +29,24 @@ public class RecordAnalyzer : DiagnosticAnalyzer
         var ns = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetStructIdNamespace();
 
         if (context.Node is not TypeDeclarationSyntax typeDeclaration ||
-            context.Compilation.GetTypeByMetadataName($"{ns}.IStructId`1") is not { } structIdType)
+            context.Compilation.GetTypeByMetadataName($"{ns}.IStructId`1") is not { } structIdTypeOfT ||
+            context.Compilation.GetTypeByMetadataName($"{ns}.IStructId") is not { } structIdType)
             return;
 
         var symbol = context.SemanticModel.GetDeclaredSymbol(typeDeclaration);
         if (symbol is null)
             return;
 
-        if (!symbol.Is(structIdType))
+        if (!symbol.Is(structIdType) && !symbol.Is(structIdTypeOfT))
             return;
 
         if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) ||
             !typeDeclaration.Modifiers.Any(SyntaxKind.ReadOnlyKeyword) ||
             !typeDeclaration.IsKind(SyntaxKind.RecordStructDeclaration))
         {
-            if (typeDeclaration.BaseList?.Types.FirstOrDefault(t => t.Type is GenericNameSyntax { Identifier.Text: "IStructId", Arity: 1 }) is { } implementation)
+            if (typeDeclaration.BaseList?.Types.FirstOrDefault(t => t.Type is GenericNameSyntax { Identifier.Text: "IStructId", Arity: 1 }) is { } generic)
+                context.ReportDiagnostic(Diagnostic.Create(MustBeRecordStruct, generic.GetLocation(), symbol.Name));
+            else if (typeDeclaration.BaseList?.Types.FirstOrDefault(t => t.Type is IdentifierNameSyntax { Identifier.Text: "IStructId" }) is { } implementation)
                 context.ReportDiagnostic(Diagnostic.Create(MustBeRecordStruct, implementation.GetLocation(), symbol.Name));
             else
                 context.ReportDiagnostic(Diagnostic.Create(MustBeRecordStruct, typeDeclaration.Identifier.GetLocation(), symbol.Name));

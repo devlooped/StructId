@@ -50,4 +50,27 @@ public class ConstructorGeneratorTests
 
         await test.RunAsync();
     }
+
+    [Fact]
+    public async Task GenerateRecordConstructorInGlobalNamespace()
+    {
+        var test = new CSharpSourceGeneratorTest<ConstructorGenerator, DefaultVerifier>
+        {
+            TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,
+            TestState =
+            {
+                Sources =
+                {
+                    """
+                    using StructId;
+
+                    public readonly partial record struct UserId : IStructId<int>;
+                    """,
+                },
+            },
+        }.WithAnalyzerStructId();
+
+        await test.RunAsync();
+    }
+
 }

@@ -39,6 +39,25 @@ public class RecordAnalyzerTests
     }
 
     [Fact]
+    public async Task ReadonlyStringRecordStructNotPartial()
+    {
+        var test = new Test
+        {
+            TestCode =
+            """
+            using StructId;
+
+            public readonly record struct UserId : {|#0:IStructId|};
+            """,
+        }.WithAnalyzerStructId();
+
+        test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId"));
+        test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(0));
+
+        await test.RunAsync();
+    }
+
+    [Fact]
     public async Task ReadonlyRecordStructNotPartial()
     {
         var test = new Test
@@ -77,6 +96,28 @@ public class RecordAnalyzerTests
 
         await test.RunAsync();
     }
+
+    [Fact]
+    public async Task PartialStringRecordStructNotReadonly()
+    {
+        var test = new Test
+        {
+            TestCode =
+            """
+            using StructId;
+
+            public partial record struct UserId : {|#0:IStructId|};
+            """,
+        }.WithAnalyzerStructId();
+
+        var expected = Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId");
+
+        test.ExpectedDiagnostics.Add(expected);
+        test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(0));
+
+        await test.RunAsync();
+    }
+
 
     [Fact]
     public async Task RecordStructNotReadonlyNorPartial()
