@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackFolder>analyzers/dotnet/roslyn4.8/cs</PackFolder>
+
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGetizer" Version="1.2.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Pack="false" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Pack="false" Version="4.8.0" />
+    <PackageReference Include="PolySharp" PrivateAssets="All" Version="1.14.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StructId\StructId.csproj" />
+  </ItemGroup>
+
+</Project>

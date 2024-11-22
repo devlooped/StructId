@@ -10,6 +10,11 @@
     <GenerateDocumentationFile Condition="$(GenerateDocumentationFile) == '' and $(IsTestProject) == 'true'">false</GenerateDocumentationFile>
     <GenerateDocumentationFile Condition="$(GenerateDocumentationFile) == '' and $(MSBuildProjectName.Contains('Tests'))">false</GenerateDocumentationFile>
     <GenerateDocumentationFile Condition="$(GenerateDocumentationFile) == ''">true</GenerateDocumentationFile>
+
+    <PrepareProjectPropertiesDependsOn>
+      EnsureProjectInformation;
+      $(PrepareProjectPropertiesDependsOn)
+    </PrepareProjectPropertiesDependsOn>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(IsPackable)' == ''">
@@ -154,7 +159,7 @@
     <PropertyGroup Condition="'$(SourceRevisionId)' != ''">
       <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">$(SourceRevisionId)</RepositoryCommit>
       <RepositorySha Condition="'$(RepositorySha)' == ''">$(SourceRevisionId.Substring(0, 9))</RepositorySha>
-      <!-- This allows the commit label added to the InformationalVersion to be the short sha instead :) -->
+      <!-- This allows the commit label added to the InformationalVersion to be the short sha instead SourceControlBranch:) -->
       <SourceRevisionId>$(RepositorySha)</SourceRevisionId>
     </PropertyGroup>
 
@@ -165,6 +170,11 @@
 
     <PropertyGroup>
       <RepositoryRoot>@(_GitSourceRoot)</RepositoryRoot>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(RepositoryBranch)' == ''">
+      <_GitBranchName>%(_GitSourceRoot.BranchName)</_GitBranchName>
+      <RepositoryBranch>$(_GitBranchName.Replace('refs/heads/', '').Replace('refs/tags/', ''))</RepositoryBranch>
     </PropertyGroup>
 
   </Target>

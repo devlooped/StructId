@@ -1,0 +1,39 @@
+<Project>
+
+  <PropertyGroup>
+    <StructIdNamespace Condition="$(StructIdNamespace)  == ''">$(RootNamespace)</StructIdNamespace>
+    <StructIdNamespace Condition="$(StructIdNamespace)  == ''">StructId</StructIdNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <StructId Include="$(MSBuildThisFileDirectory)*.cs" />
+  </ItemGroup>
+
+  <Target Name="CopyStructId" Inputs="@(StructId)" Outputs="@(StructId -> '$(IntermediateOutputPath)%(Filename).g%(Extension)')">
+    <PropertyGroup>
+      <StructIdTargetFile>@(StructId -> '$(IntermediateOutputPath)%(Filename).g%(Extension)')</StructIdTargetFile>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="$(StructIdNamespace) != 'StructId'">
+      <StructIdContent>$([System.IO.File]::ReadAllText(%(StructId.FullPath)))</StructIdContent>
+      <StructIdContent>$(StructIdContent.Replace('namespace StructId', 'namespace $(StructIdNamespace)'))</StructIdContent>
+    </PropertyGroup>
+
+    <Copy Condition="$(StructIdNamespace) == 'StructId'"
+          SourceFiles="@(StructId)"
+          DestinationFiles="$(StructIdTargetFile)" 
+          SkipUnchangedFiles="true" />
+
+    <WriteLinesToFile Condition="$(StructIdNamespace) != 'StructId'" 
+                      File="$(StructIdTargetFile)" 
+                      Lines="$(StructIdContent)" 
+                      Overwrite="true" />
+  </Target>
+
+  <Target Name="AddStructId" DependsOnTargets="CopyStructId" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+    <ItemGroup>
+      <Compile Include="@(StructId -> '$(IntermediateOutputPath)%(Filename).g%(Extension)')" Link="%(StructId.Filename)%(Extension)" Visible="false" />
+    </ItemGroup>
+  </Target>
+
+</Project>

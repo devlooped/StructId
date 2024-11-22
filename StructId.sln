@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructId", "src\StructId\St
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructId.Tests", "src\StructId.Tests\StructId.Tests.csproj", "{4616804F-CDBE-47A2-B03E-2D87F2088A69}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructId.CodeFix", "src\StructId.CodeFix\StructId.CodeFix.csproj", "{BC2FCF3B-C564-4510-9285-FCC9E5E7C8D6}"
+EndProject
+Project("{13B669BE-BB05-4DDF-9536-439F39A36129}") = "StructId.Package", "src\StructId.Package\StructId.Package.msbuildproj", "{C56D242D-7106-08CA-0DC9-4FC3307CCC29}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{4616804F-CDBE-47A2-B03E-2D87F2088A69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4616804F-CDBE-47A2-B03E-2D87F2088A69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4616804F-CDBE-47A2-B03E-2D87F2088A69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC2FCF3B-C564-4510-9285-FCC9E5E7C8D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC2FCF3B-C564-4510-9285-FCC9E5E7C8D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC2FCF3B-C564-4510-9285-FCC9E5E7C8D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC2FCF3B-C564-4510-9285-FCC9E5E7C8D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C56D242D-7106-08CA-0DC9-4FC3307CCC29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C56D242D-7106-08CA-0DC9-4FC3307CCC29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C56D242D-7106-08CA-0DC9-4FC3307CCC29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C56D242D-7106-08CA-0DC9-4FC3307CCC29}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

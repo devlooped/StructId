@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RestoreSources>https://api.nuget.org/v3/index.json;$(PackageOutputPath)</RestoreSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StructId" Version="42.*" />
+  </ItemGroup>
+
+</Project>

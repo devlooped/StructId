@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>StructId</PackageId>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <Description>Stronly typed ids using readonly record structs.s</Description>
+    <PackageTags>dotnet record struct typed id</PackageTags>
+    <PackFolder>build</PackFolder>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NuGetizer" Version="1.2.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StructId.CodeFix\StructId.CodeFix.csproj" />
+    <ProjectReference Include="..\StructId\StructId.csproj" />
+  </ItemGroup>
+</Project>

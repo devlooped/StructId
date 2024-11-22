@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Roslyn": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\StructId.Tests\\StructId.Tests.csproj",
+      "commandLineArgs": "--wait"
+    }
+  }
+}
