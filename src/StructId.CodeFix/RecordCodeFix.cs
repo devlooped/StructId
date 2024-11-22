@@ -73,7 +73,7 @@ public class RecordCodeFix : CodeFixProvider
                     declaration.SemicolonToken);
             }
 
-            return Task.FromResult(document.WithSyntaxRoot(root.ReplaceNode(original, declaration)));                    
+            return Task.FromResult(document.WithSyntaxRoot(root.ReplaceNode(original, declaration)));
         }
     }
 }

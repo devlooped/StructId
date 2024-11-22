@@ -1,10 +1,6 @@
 <Project>
 
-  <PropertyGroup>
-  </PropertyGroup>
-
   <ItemGroup>
-    <CompilerVisibleProperty Include="IsTestProject" />
     <CompilerVisibleProperty Include="StructIdNamespace" />
     <CompilerVisibleProperty Include="RootNamespace" />
   </ItemGroup>

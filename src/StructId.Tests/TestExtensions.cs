@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Testing;
 
 namespace StructId;
@@ -15,7 +15,8 @@ public static class TestExtensions
     {
         test.WithAnalyzerStructId();
 
-        test.FixedState.Sources.Add(("IStructId.cs", ThisAssembly.Resources.IStructId.Text));
+        test.FixedState.Sources.Add(("IStructId.cs", ThisAssembly.Resources.StructId.IStructId.Text));
+        test.FixedState.Sources.Add(("IStructId`1.cs", ThisAssembly.Resources.StructId.IStructId_1.Text));
         // Fixes error CS0518: Predefined type 'System.Runtime.CompilerServices.IsExternalInit' is not defined or imported
         test.FixedState.Sources.Add(
             """
@@ -38,7 +39,8 @@ public static class TestExtensions
             return project.WithParseOptions(parseOptions).Solution;
         });
 
-        test.TestState.Sources.Add(("IStructId.cs", ThisAssembly.Resources.IStructId.Text));
+        test.TestState.Sources.Add(("IStructId.cs", ThisAssembly.Resources.StructId.IStructId.Text));
+        test.TestState.Sources.Add(("IStructId`1.cs", ThisAssembly.Resources.StructId.IStructId_1.Text));
         // Fixes error CS0518: Predefined type 'System.Runtime.CompilerServices.IsExternalInit' is not defined or imported
         test.TestState.Sources.Add(
             """

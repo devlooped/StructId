@@ -88,7 +88,7 @@ public static class AnalysisExtensions
 
     public static string ToFileName(this ITypeSymbol type) => type.ToDisplayString(FullName).Replace('+', '.');
 
-    public static bool IsStructId(this ITypeSymbol type) => type.AllInterfaces.Any(x => x.Name == "IStructId" && x.IsGenericType && x.TypeArguments.Length == 1);
+    public static bool IsStructId(this ITypeSymbol type) => type.AllInterfaces.Any(x => x.Name == "IStructId");
 
     public static bool IsPartial(this ITypeSymbol node) => node.DeclaringSyntaxReferences.Any(
         r => r.GetSyntax() is TypeDeclarationSyntax { Modifiers: { } modifiers } &&

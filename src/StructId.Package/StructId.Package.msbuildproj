@@ -11,7 +11,11 @@
     <PackageReference Include="NuGetizer" Version="1.2.3" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\StructId.Analyzer\StructId.Analyzer.csproj" />
     <ProjectReference Include="..\StructId.CodeFix\StructId.CodeFix.csproj" />
-    <ProjectReference Include="..\StructId\StructId.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\StructId\*.cs" Visible="false" />
+    <None Update="@(None)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

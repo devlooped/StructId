@@ -19,12 +19,13 @@ public class ConstructorGenerator : IIncrementalGenerator
     void GenerateCode(SourceProductionContext context, INamedTypeSymbol symbol)
     {
         var ns = symbol.ContainingNamespace.ToDisplayString();
-        var type = symbol.AllInterfaces.First(x => x.Name == "IStructId").TypeArguments[0].GetTypeName(ns);
+        // Generic IStructId<T> -> T, otherwise string
+        var type = symbol.AllInterfaces.First(x => x.Name == "IStructId").TypeArguments.Select(x => x.GetTypeName(ns)).FirstOrDefault() ?? "string";
 
-        var kind = symbol.IsRecord && symbol.IsValueType ? 
-            "record struct" : 
-            symbol.IsRecord ?  
-            "record" : 
+        var kind = symbol.IsRecord && symbol.IsValueType ?
+            "record struct" :
+            symbol.IsRecord ?
+            "record" :
             "class";
 
         var output =

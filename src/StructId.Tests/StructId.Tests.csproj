@@ -22,12 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StructId\StructId.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\StructId.Analyzer\StructId.Analyzer.csproj" OutputItemType="Analyzer" />
     <ProjectReference Include="..\StructId.CodeFix\StructId.CodeFix.csproj" OutputItemType="Analyzer" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="..\StructId.Package\IStructId.cs" Link="IStructId.cs" Type="Non-Resx" Visible="false" />
+    <ProjectReference Include="..\StructId.Package\StructId.Package.msbuildproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +32,14 @@
     <Using Include="Xunit.Abstractions" />
   </ItemGroup>
 
+  <ItemGroup>
+    <StructId Include="..\StructId\*.cs" Link="StructId\%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <Import Project="..\StructId.Package\StructId.targets" />
+
+  <ItemGroup>
+    <EmbeddedResource Include="@(StructId)" Type="Non-Resx" />
+  </ItemGroup>
 
 </Project>
