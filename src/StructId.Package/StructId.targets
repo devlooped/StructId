@@ -9,31 +9,59 @@
     <StructId Include="$(MSBuildThisFileDirectory)*.cs" Link="StructId\%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <Target Name="CopyStructId" Inputs="@(StructId)" Outputs="@(StructId -> '$(IntermediateOutputPath)%(Link)')">
+  <Target Name="CollectStructIds" Returns="@(StructId)">
+    <ItemGroup>
+      <StructId>
+        <TargetPath>$(IntermediateOutputPath)%(Link)</TargetPath>
+      </StructId>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CopyStructIdAsIs" Condition="$(StructIdNamespace) == 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="%(StructId.TargetPath)">
+    <Copy SourceFiles="@(StructId)"
+          DestinationFiles="@(StructId -> '%(TargetPath)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="AddStructIdContent" Condition="$(StructIdNamespace) != 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="|%(StructId.Identity)|" Returns="@(StructId)">
     <PropertyGroup>
-      <StructIdTargetFile>@(StructId -> '$(IntermediateOutputPath)%(Link)')</StructIdTargetFile>
-    </PropertyGroup>
-    
-    <PropertyGroup Condition="$(StructIdNamespace) != 'StructId'">
       <StructIdContent>$([System.IO.File]::ReadAllText(%(StructId.FullPath)))</StructIdContent>
       <StructIdContent>$(StructIdContent.Replace('namespace StructId', 'namespace $(StructIdNamespace)'))</StructIdContent>
     </PropertyGroup>
-
-    <Copy Condition="$(StructIdNamespace) == 'StructId'"
-          SourceFiles="@(StructId)"
-          DestinationFiles="$(StructIdTargetFile)" 
-          SkipUnchangedFiles="true" />
-
-    <WriteLinesToFile Condition="$(StructIdNamespace) != 'StructId'" 
-                      File="$(StructIdTargetFile)" 
-                      Lines="$(StructIdContent)" 
-                      Overwrite="true" />
-  </Target>
-
-  <Target Name="AddStructId" DependsOnTargets="CopyStructId" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
     <ItemGroup>
-      <Compile Include="@(StructId -> '$(IntermediateOutputPath)%(Link)')" />
+      <StructId>
+        <Content>$([MSBuild]::Unescape($(StructIdContent)))</Content>
+      </StructId>
     </ItemGroup>
   </Target>
+
+  <Target Name="CopyStructIdNamespaced" Condition="$(StructIdNamespace) != 'StructId'" DependsOnTargets="AddStructIdContent" Inputs="@(StructId)" Outputs="%(StructId.TargetPath)">
+    <WriteRaw Content="%(StructId.Content)" TargetPath="%(StructId.TargetPath)" />
+  </Target>
+
+  <Target Name="AddStructId" DependsOnTargets="CopyStructIdAsIs;CopyStructIdNamespaced" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun" Returns="@(StructId)">
+    <ItemGroup>
+      <Compile Include="%(StructId.TargetPath)" />
+    </ItemGroup>
+  </Target>
+
+  <UsingTask TaskName="WriteRaw" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Content ParameterType="System.String" Required="true" />
+      <TargetPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text"/>
+      <Using Namespace="Microsoft.Build.Framework"/>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        Directory.CreateDirectory(Path.GetDirectoryName(TargetPath));
+        File.WriteAllText(TargetPath, Content, Encoding.UTF8);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
 
 </Project>
