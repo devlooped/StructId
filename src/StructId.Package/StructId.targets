@@ -6,12 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <StructId Include="$(MSBuildThisFileDirectory)*.cs" />
+    <StructId Include="$(MSBuildThisFileDirectory)*.cs" Link="StructId\%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <Target Name="CopyStructId" Inputs="@(StructId)" Outputs="@(StructId -> '$(IntermediateOutputPath)%(Filename).g%(Extension)')">
+  <Target Name="CopyStructId" Inputs="@(StructId)" Outputs="@(StructId -> '$(IntermediateOutputPath)%(Link)')">
     <PropertyGroup>
-      <StructIdTargetFile>@(StructId -> '$(IntermediateOutputPath)%(Filename).g%(Extension)')</StructIdTargetFile>
+      <StructIdTargetFile>@(StructId -> '$(IntermediateOutputPath)%(Link)')</StructIdTargetFile>
     </PropertyGroup>
     
     <PropertyGroup Condition="$(StructIdNamespace) != 'StructId'">
@@ -32,7 +32,7 @@
 
   <Target Name="AddStructId" DependsOnTargets="CopyStructId" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
     <ItemGroup>
-      <Compile Include="@(StructId -> '$(IntermediateOutputPath)%(Filename).g%(Extension)')" Link="%(StructId.Filename)%(Extension)" Visible="false" />
+      <Compile Include="@(StructId -> '$(IntermediateOutputPath)%(Link)')" />
     </ItemGroup>
   </Target>
 

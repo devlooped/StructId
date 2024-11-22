@@ -13,6 +13,6 @@ public static class Diagnostics
         "Change '{0}' to a partial readonly record struct as required for types used as struct ids.",
         "Build",
         DiagnosticSeverity.Error,
-        isEnabledByDefault: true, 
+        isEnabledByDefault: true,
         helpLinkUri: $"{ThisAssembly.Project.RepositoryUrl}/blob/{ThisAssembly.Project.RepositoryBranch}/docs/SID001.md");
 }

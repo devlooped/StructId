@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StructId\StructId.csproj" />
+    <ProjectReference Include="..\StructId.Analyzer\StructId.Analyzer.csproj" />
   </ItemGroup>
 
 </Project>

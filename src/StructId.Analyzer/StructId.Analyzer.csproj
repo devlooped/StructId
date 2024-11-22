@@ -10,14 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="IStructId`1.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="IStructId`1.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Pack="false" Version="4.8.0" />
     <PackageReference Include="NuGetizer" Version="1.2.3" />
     <PackageReference Include="PolySharp" PrivateAssets="All" Version="1.14.1" />
