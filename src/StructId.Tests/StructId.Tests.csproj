@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.SourceGenerators.Testing" Version="1.1.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="1.1.2" />
-    <PackageReference Include="ThisAssembly.Resources" Version="42.42.1242-main" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.Resources" Version="2.0.9" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,13 +34,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <StructId Include="..\StructId\*.cs" Link="StructId\%(Filename)%(Extension)" />
+    <StructId Include="..\StructId\*.cs" Link="StructId\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
 
   <ItemGroup>
     <EmbeddedResource Include="@(StructId)" Type="Non-Resx" />
+    <EmbeddedResource Include="..\StructId\Templates\*.cs" Link="StructId\Templates\%(Filename)%(Extension)" Type="Non-Resx"/>
   </ItemGroup>
 
 </Project>

@@ -77,9 +77,12 @@ public static class AnalysisExtensions
         }
     }
 
-    public static string GetTypeName(this ITypeSymbol type, string containingNamespace)
+    public static string GetTypeName(this ITypeSymbol type, string? containingNamespace)
     {
         var typeName = type.ToDisplayString(FullName);
+        if (containingNamespace == null)
+            return typeName;
+
         if (typeName.StartsWith(containingNamespace + "."))
             return typeName[(containingNamespace.Length + 1)..];
 

@@ -5,7 +5,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <SignAssembly>false</SignAssembly>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
-
+    <NoWarn>CS0436;$(NoWarn)</NoWarn>
     <RestoreSources>https://pkg.kzu.app/index.json;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
 

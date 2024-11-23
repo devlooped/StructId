@@ -13,17 +13,22 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Pack="false" Version="4.8.0" />
     <PackageReference Include="NuGetizer" Version="1.2.3" />
     <PackageReference Include="PolySharp" PrivateAssets="All" Version="1.14.1" />
-    <PackageReference Include="ThisAssembly.AssemblyInfo" Version="42.42.1242-main" PrivateAssets="all" />
-    <PackageReference Include="ThisAssembly.Project" Version="42.42.1242-main" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.AssemblyInfo" Version="2.0.9" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.Project" Version="2.0.9" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.Resources" Version="2.0.9" PrivateAssets="all" />
   </ItemGroup>
 
-  <Target Name="CopyEmbeddedCode" Inputs="@(EmbeddedCode)" Outputs="@(EmbeddedCode -> '$(IntermediateOutputPath)%(Filename).txt')">
-    <Copy SourceFiles="@(EmbeddedCode)" DestinationFiles="@(EmbeddedCode -> '$(IntermediateOutputPath)%(Filename).txt')" SkipUnchangedFiles="true" />
+  <ItemGroup>
+    <TemplateCode Include="..\StructId\Templates\*.cs" Link="StructId\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <Target Name="CopyTemplateCode" Inputs="@(TemplateCode)" Outputs="@(TemplateCode -> '$(IntermediateOutputPath)Templates\%(Filename).txt')">
+    <Copy SourceFiles="@(TemplateCode)" DestinationFiles="@(TemplateCode -> '$(IntermediateOutputPath)Templates\%(Filename).txt')" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="AddEmbeddedResources" DependsOnTargets="CopyEmbeddedCode" BeforeTargets="SplitResourcesByCulture">
+  <Target Name="AddTemplateCode" DependsOnTargets="CopyTemplateCode" BeforeTargets="SplitResourcesByCulture">
     <ItemGroup>
-      <EmbeddedResource Include="@(EmbeddedCode -> '$(IntermediateOutputPath)%(Filename).txt')" Link="%(EmbeddedCode.Filename).txt" Type="Non-Resx" />
+      <EmbeddedResource Include="@(TemplateCode -> '$(IntermediateOutputPath)Templates\%(Filename).txt')" Link="Templates\%(TemplateCode.Filename).txt" Type="Non-Resx" />
     </ItemGroup>
   </Target>
 
