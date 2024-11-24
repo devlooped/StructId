@@ -7,7 +7,7 @@ using System.ComponentModel;
 namespace StructId;
 
 /// <summary>
-/// Type converter for <see cref="IStructId{T}"/> and <see cref="IStructId"/>.
+/// Type converters for <see cref="IStructId{T}"/> and <see cref="IStructId"/>.
 /// </summary>
 public static partial class StructIdConverters
 {

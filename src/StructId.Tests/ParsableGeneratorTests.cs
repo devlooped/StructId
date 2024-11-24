@@ -6,7 +6,7 @@ using static StructId.RoslynTestingExtensions;
 
 namespace StructId;
 
-public class ParseableGeneratorTests
+public class ParsableGeneratorTests
 {
     [Fact]
     public async Task GenerateParseable()
@@ -26,8 +26,8 @@ public class ParseableGeneratorTests
                 },
                 GeneratedSources =                 
                 {
-                    (typeof(ParsableGenerator), @"UserId.parsable.cs", 
-                    ThisAssembly.Resources.StructId.Templates.TParseable.Text.Replace("TStruct", "UserId").Replace("TValue", "System.Int32"),
+                    (typeof(ParsableGenerator), "UserId.cs", 
+                    ThisAssembly.Resources.StructId.Templates.TParsable.Text.Replace("TStruct", "UserId").Replace("TValue", "int"),
                     Encoding.UTF8)
                 },
             },
@@ -54,8 +54,8 @@ public class ParseableGeneratorTests
                 },
                 GeneratedSources =
                 {
-                    (typeof(ParsableGenerator), @"UserId.parsable.cs",
-                    ThisAssembly.Resources.StructId.Templates.SParseable.Text.Replace("SStruct", "UserId"),
+                    (typeof(ParsableGenerator), "UserId.cs",
+                    ThisAssembly.Resources.StructId.Templates.SParsable.Text.Replace("SStruct", "UserId"),
                     Encoding.UTF8)
                 },
             },

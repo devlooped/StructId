@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="StructId" Version="42.253.1273" />
+    <PackageReference Include="StructId" Version="42.254.378" />
   </ItemGroup>
 
 </Project>

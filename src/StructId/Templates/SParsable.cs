@@ -6,7 +6,9 @@ using System;
 
 readonly partial record struct SStruct : IParsable<SStruct>
 {
-    public static SStruct Parse(string s, IFormatProvider? provider) => new(s);
+    public static SStruct Parse(string s, IFormatProvider? provider)
+        => s is null ? throw new ArgumentNullException(nameof(s)) : new(s);
+
     public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out SStruct result)
     {
         if (s is not null)

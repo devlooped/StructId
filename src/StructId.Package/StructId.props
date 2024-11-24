@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <CompilerVisibleProperty Include="StructIdNamespace" />
-    <CompilerVisibleProperty Include="RootNamespace" />
   </ItemGroup>
 
 </Project>

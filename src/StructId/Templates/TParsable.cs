@@ -6,11 +6,11 @@ using System;
 
 readonly partial record struct TStruct : IParsable<TStruct>
 {
-    public static TStruct Parse(string s, IFormatProvider? provider) => new(TValue.Parse(s));
+    public static TStruct Parse(string s, IFormatProvider? provider) => new(TValue.Parse(s, provider));
 
     public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TStruct result)
     {
-        if (TValue.TryParse(s, out var value))
+        if (TValue.TryParse(s, provider, out var value))
         {
             result = new TStruct(value);
             return true;
