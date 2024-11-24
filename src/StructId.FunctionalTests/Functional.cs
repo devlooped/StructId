@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
 
 namespace StructId.Functional;
 
@@ -26,7 +18,7 @@ public class FunctionalTests
         var guid = Guid.NewGuid();
         var id1 = new ProductId(guid);
         var id2 = new ProductId(guid);
-        
+
         Assert.Equal(id1, id2);
         Assert.True(id1 == id2);
     }
