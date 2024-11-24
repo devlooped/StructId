@@ -11,5 +11,5 @@ namespace StructId;
 [Generator(LanguageNames.CSharp)]
 public class ParsableGenerator() : TemplateGenerator(
     "System.IParsable`1",
-    ThisAssembly.Resources.Templates.SParsable.Text,
-    ThisAssembly.Resources.Templates.TParsable.Text);
+    ThisAssembly.Resources.Templates.Parsable.Text,
+    ThisAssembly.Resources.Templates.ParsableT.Text);

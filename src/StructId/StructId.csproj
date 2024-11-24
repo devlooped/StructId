@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="PolySharp" PrivateAssets="All" Version="1.14.1" />
   </ItemGroup>
 
