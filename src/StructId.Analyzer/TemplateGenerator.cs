@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -35,7 +34,7 @@ public abstract class TemplateGenerator(string valueType, string stringTemplate,
             .Select((x, _) => (InterfaceType: x.GetTypeByMetadataName(valueType), StringType: x.GetTypeByMetadataName("System.String")));
 
         var ids = context.CompilationProvider
-            .SelectMany((x, _) =>  x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
+            .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
             .Where(x => x.IsStructId())
             .Where(x => x.IsPartial());
 

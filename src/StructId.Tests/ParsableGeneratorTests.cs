@@ -1,8 +1,6 @@
 ﻿using System.Text;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Text;
-using static StructId.RoslynTestingExtensions;
 
 namespace StructId;
 
@@ -24,9 +22,9 @@ public class ParsableGeneratorTests
                     public readonly partial record struct UserId(int Value) : IStructId<int>;
                     """,
                 },
-                GeneratedSources =                 
+                GeneratedSources =
                 {
-                    (typeof(ParsableGenerator), "UserId.cs", 
+                    (typeof(ParsableGenerator), "UserId.cs",
                     ThisAssembly.Resources.StructId.Templates.ParsableT.Text.Replace("TStruct", "UserId").Replace("TValue", "int"),
                     Encoding.UTF8)
                 },

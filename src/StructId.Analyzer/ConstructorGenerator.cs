@@ -19,8 +19,8 @@ public class ConstructorGenerator : IIncrementalGenerator
 
     void GenerateCode(SourceProductionContext context, INamedTypeSymbol symbol)
     {
-        var ns = symbol.ContainingNamespace.Equals(symbol.ContainingModule.GlobalNamespace, SymbolEqualityComparer.Default) 
-            ? null 
+        var ns = symbol.ContainingNamespace.Equals(symbol.ContainingModule.GlobalNamespace, SymbolEqualityComparer.Default)
+            ? null
             : symbol.ContainingNamespace.ToDisplayString();
 
         // Generic IStructId<T> -> T, otherwise string
