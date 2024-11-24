@@ -9,7 +9,19 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace StructId;
 
-public abstract class TemplateGenerator(string valueInterface, string stringTemplate, string typeTemplate) : IIncrementalGenerator
+public enum TypeCheck
+{
+    /// <summary>
+    /// The check involves ensuring the type exists in the compilation.
+    /// </summary>
+    TypeExists,
+    /// <summary>
+    /// In addition to <see cref="TypeExists"/>, the check involves ensuring the type implements the interface.
+    /// </summary>
+    ValueIsType,
+}
+
+public abstract class TemplateGenerator(string valueType, string stringTemplate, string typeTemplate, TypeCheck interfaceCheck = TypeCheck.ValueIsType) : IIncrementalGenerator
 {
     record struct TemplateArgs(string TargetNamespace, INamedTypeSymbol StructId, INamedTypeSymbol ValueType, INamedTypeSymbol InterfaceType, INamedTypeSymbol StringType);
 
@@ -20,7 +32,7 @@ public abstract class TemplateGenerator(string valueInterface, string stringTemp
 
         // Locate the required types
         var types = context.CompilationProvider
-            .Select((x, _) => (InterfaceType: x.GetTypeByMetadataName(valueInterface), StringType: x.GetTypeByMetadataName("System.String")));
+            .Select((x, _) => (InterfaceType: x.GetTypeByMetadataName(valueType), StringType: x.GetTypeByMetadataName("System.String")));
 
         var ids = context.CompilationProvider
             .SelectMany((x, _) =>  x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
@@ -43,8 +55,10 @@ public abstract class TemplateGenerator(string valueInterface, string stringTemp
                     stringType!;
 
                 return new TemplateArgs(targetNamespace, structId, valueType, interfaceType!, stringType!);
-            })
-            .Where(x => x.ValueType.Is(x.InterfaceType));
+            });
+
+        if (interfaceCheck == TypeCheck.ValueIsType)
+            combined = combined.Where(x => x.ValueType.Is(x.InterfaceType));
 
         context.RegisterImplementationSourceOutput(combined, GenerateCode);
     }

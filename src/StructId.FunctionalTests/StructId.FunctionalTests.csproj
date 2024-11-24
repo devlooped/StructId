@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <Import Project="..\StructId.Package\StructId.props" />
 
   <PropertyGroup>
@@ -13,13 +12,6 @@
     <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.11.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.2" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.2" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.SourceGenerators.Testing" Version="1.1.2" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="1.1.2" />
-    <PackageReference Include="ThisAssembly.Resources" Version="2.0.9" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
@@ -39,10 +31,4 @@
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
-
-  <ItemGroup>
-    <EmbeddedResource Include="@(StructId)" Type="Non-Resx" />
-    <EmbeddedResource Include="..\StructId\Templates\*.cs" Link="StructId\Templates\%(Filename)%(Extension)" Type="Non-Resx"/>
-  </ItemGroup>
-
 </Project>

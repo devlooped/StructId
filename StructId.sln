@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructId.Analyzer", "src\St
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructId", "src\StructId\StructId.csproj", "{CBFE34F2-2D9E-E7D9-10DB-75CAA5AF89B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructId.FunctionalTests", "src\StructId.FunctionalTests\StructId.FunctionalTests.csproj", "{FAA381C4-0E8A-4B2A-8BC2-27F1EED86064}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{CBFE34F2-2D9E-E7D9-10DB-75CAA5AF89B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBFE34F2-2D9E-E7D9-10DB-75CAA5AF89B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBFE34F2-2D9E-E7D9-10DB-75CAA5AF89B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FAA381C4-0E8A-4B2A-8BC2-27F1EED86064}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAA381C4-0E8A-4B2A-8BC2-27F1EED86064}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAA381C4-0E8A-4B2A-8BC2-27F1EED86064}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAA381C4-0E8A-4B2A-8BC2-27F1EED86064}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
