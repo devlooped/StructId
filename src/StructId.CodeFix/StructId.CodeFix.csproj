@@ -13,7 +13,7 @@
     <PackageReference Include="NuGetizer" Version="1.2.3" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Pack="false" Version="4.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Pack="false" Version="4.8.0" />
-    <PackageReference Include="PolySharp" PrivateAssets="All" Version="1.14.1" />
+    <PackageReference Include="PolySharp" PrivateAssets="All" Version="1.15.0" />
   </ItemGroup>
 
   <ItemGroup>
