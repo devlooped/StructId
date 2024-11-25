@@ -25,7 +25,7 @@ public class ParsableGeneratorTests
                 GeneratedSources =
                 {
                     (typeof(ParsableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.ParsableT.Text.Replace("TSelf", "UserId").Replace("TValue", "int"),
+                    ThisAssembly.Resources.StructId.Templates.ParsableT.Text.WithSelf("UserId", "int"),
                     Encoding.UTF8)
                 },
             },
@@ -53,7 +53,7 @@ public class ParsableGeneratorTests
                 GeneratedSources =
                 {
                     (typeof(ParsableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.Parsable.Text.Replace("Self", "UserId"),
+                    ThisAssembly.Resources.StructId.Templates.Parsable.Text.WithSelf("UserId"),
                     Encoding.UTF8)
                 },
             },

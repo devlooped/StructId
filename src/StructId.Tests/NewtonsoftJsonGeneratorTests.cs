@@ -62,7 +62,7 @@ public class NewtonsoftJsonGeneratorTests
                 GeneratedSources =
                 {
                     (typeof(NewtonsoftJsonGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.NewtonsoftJsonConverterT.Text.Replace("TSelf", "UserId").Replace("TValue", "int"),
+                    ThisAssembly.Resources.StructId.Templates.NewtonsoftJsonConverterT.Text.WithSelf("UserId", "int"),
                     Encoding.UTF8),
                     (typeof(NewtonsoftJsonGenerator), "NewtonsoftJsonConverter.cs",
                     ThisAssembly.Resources.StructId.Templates.NewtonsoftJsonConverter_1.Text,
@@ -85,22 +85,22 @@ public class NewtonsoftJsonGeneratorTests
             {
                 TestState.GeneratedSources.Add(
                     (typeof(NewableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.NewableT.Text.Replace("TSelf", "UserId").Replace("TValue", tvalue),
+                    ThisAssembly.Resources.StructId.Templates.NewableT.Text.WithSelf("UserId", tvalue),
                     Encoding.UTF8));
                 TestState.GeneratedSources.Add(
                     (typeof(ParsableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.ParsableT.Text.Replace("TSelf", "UserId").Replace("TValue", "int"),
+                    ThisAssembly.Resources.StructId.Templates.ParsableT.Text.WithSelf("UserId", "int"),
                     Encoding.UTF8));
             }
             else
             {
                 TestState.GeneratedSources.Add(
                     (typeof(NewableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.Newable.Text.Replace("Self", "UserId"),
+                    ThisAssembly.Resources.StructId.Templates.Newable.Text.WithSelf("UserId"),
                     Encoding.UTF8));
                 TestState.GeneratedSources.Add(
                     (typeof(ParsableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.Parsable.Text.Replace("Self", "UserId"),
+                    ThisAssembly.Resources.StructId.Templates.Parsable.Text.WithSelf("UserId"),
                     Encoding.UTF8));
             }
         }
