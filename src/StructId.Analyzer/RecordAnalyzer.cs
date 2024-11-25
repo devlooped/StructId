@@ -40,9 +40,11 @@ public class RecordAnalyzer : DiagnosticAnalyzer
         if (!symbol.Is(structIdType) && !symbol.Is(structIdTypeOfT))
             return;
 
-        if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) ||
-            !typeDeclaration.Modifiers.Any(SyntaxKind.ReadOnlyKeyword) ||
-            !typeDeclaration.IsKind(SyntaxKind.RecordStructDeclaration))
+        // If there's only one declaration and it's not partial
+        var report = symbol.DeclaringSyntaxReferences.Length == 1 && !typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword);
+        report |= !typeDeclaration.IsKind(SyntaxKind.RecordStructDeclaration) || !symbol.IsReadOnly;
+
+        if (report)
         {
             if (typeDeclaration.BaseList?.Types.FirstOrDefault(t => t.Type is GenericNameSyntax { Identifier.Text: "IStructId", Arity: 1 }) is { } generic)
                 context.ReportDiagnostic(Diagnostic.Create(MustBeRecordStruct, generic.GetLocation(), symbol.Name));
@@ -51,6 +53,5 @@ public class RecordAnalyzer : DiagnosticAnalyzer
             else
                 context.ReportDiagnostic(Diagnostic.Create(MustBeRecordStruct, typeDeclaration.Identifier.GetLocation(), symbol.Name));
         }
-
     }
 }
