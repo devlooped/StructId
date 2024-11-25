@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -9,8 +10,11 @@ using Microsoft.CodeAnalysis.Testing;
 
 namespace StructId;
 
-public static class TestExtensions
+public static partial class TestExtensions
 {
+    public static string WithSelf(this string template, string typeName, string? valueType = default)
+        => template.Replace(SelfExpr(), typeName).Replace(TSelfExpr(), typeName).Replace(TValueExpr(), valueType ?? "string");
+
     public static TTest WithCodeFixStructId<TTest>(this TTest test) where TTest : CodeFixTest<DefaultVerifier>
     {
         test.WithAnalyzerStructId();
@@ -58,4 +62,16 @@ public static class TestExtensions
 
         return test;
     }
+
+    public static string Replace(this string template, Regex regex, string value)
+        => regex.Replace(template, value);
+
+    [GeneratedRegex(@"\bSelf\b")]
+    private static partial Regex SelfExpr();
+
+    [GeneratedRegex(@"\bTSelf\b")]
+    private static partial Regex TSelfExpr();
+
+    [GeneratedRegex(@"\bTValue\b")]
+    private static partial Regex TValueExpr();
 }

@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <StructId Include="..\StructId\*.cs" Link="StructId\%(RecursiveDir)%(Filename)%(Extension)" />
+    <UpToDateCheck Include="@(TemplateCode)"/>
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
