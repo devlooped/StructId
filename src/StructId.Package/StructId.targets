@@ -1,15 +1,16 @@
 <Project>
 
   <PropertyGroup>
-    <StructIdNamespace Condition="$(StructIdNamespace)  == ''">$(RootNamespace)</StructIdNamespace>
-    <StructIdNamespace Condition="$(StructIdNamespace)  == ''">StructId</StructIdNamespace>
+    <StructIdNamespace Condition="$(StructIdNamespace) == ''">$(RootNamespace)</StructIdNamespace>
+    <StructIdNamespace Condition="$(StructIdNamespace) == ''">StructId</StructIdNamespace>
+    <StrictIdPathHash Condition="$(StructIdNamespace) != ''">$([MSBuild]::StableStringHash($(StructIdNamespace)))\</StrictIdPathHash>
   </PropertyGroup>
 
   <ItemGroup>
-    <StructId Include="$(MSBuildThisFileDirectory)*.cs" Link="StructId\%(Filename)%(Extension)" />
+    <StructId Include="$(MSBuildThisFileDirectory)*.cs" Link="StructId\$(StrictIdPathHash)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <Target Name="CollectStructIds" Returns="@(StructId)">
+  <Target Name="CollectStructIds">
     <ItemGroup>
       <StructId>
         <TargetPath>$(IntermediateOutputPath)%(Link)</TargetPath>
@@ -23,7 +24,7 @@
           SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="AddStructIdContent" Condition="$(StructIdNamespace) != 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="|%(StructId.Identity)|" Returns="@(StructId)">
+  <Target Name="AddStructIdContent" Condition="$(StructIdNamespace) != 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="|%(StructId.Identity)|">
     <PropertyGroup>
       <StructIdContent>$([System.IO.File]::ReadAllText(%(StructId.FullPath)))</StructIdContent>
       <StructIdContent>$(StructIdContent.Replace('namespace StructId', 'namespace $(StructIdNamespace)'))</StructIdContent>
@@ -39,7 +40,7 @@
     <WriteRaw Content="%(StructId.Content)" TargetPath="%(StructId.TargetPath)" />
   </Target>
 
-  <Target Name="AddStructId" DependsOnTargets="CopyStructIdAsIs;CopyStructIdNamespaced" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun" Returns="@(StructId)">
+  <Target Name="AddStructId" DependsOnTargets="CopyStructIdAsIs;CopyStructIdNamespaced" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
     <ItemGroup>
       <Compile Include="%(StructId.TargetPath)" />
     </ItemGroup>
