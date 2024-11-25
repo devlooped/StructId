@@ -10,14 +10,14 @@ namespace StructId;
 public static partial class StructIdConverters
 {
 #if NET7_0_OR_GREATER
-    public class SystemTextJsonConverter<TStruct, TValue> : JsonConverter<TStruct>
-        where TStruct : IStructId<TValue>, INewable<TStruct, TValue>
+    public class SystemTextJsonConverter<TSelf, TValue> : JsonConverter<TSelf>
+        where TSelf : IStructId<TValue>, INewable<TSelf, TValue>
         where TValue: struct, IParsable<TValue>
     {
-        public override TStruct Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            => TStruct.New(TValue.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
+        public override TSelf Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            => TSelf.New(TValue.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
 
-        public override void Write(Utf8JsonWriter writer, TStruct value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TSelf value, JsonSerializerOptions options)
         {
             switch (value.Value)
             {
@@ -32,26 +32,26 @@ public static partial class StructIdConverters
             }
         }
 
-        public override TStruct ReadAsPropertyName(ref global::System.Text.Json.Utf8JsonReader reader, global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options)
-            => TStruct.New(TValue.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
+        public override TSelf ReadAsPropertyName(ref global::System.Text.Json.Utf8JsonReader reader, global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options)
+            => TSelf.New(TValue.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
 
-        public override void WriteAsPropertyName(global::System.Text.Json.Utf8JsonWriter writer, TStruct value, global::System.Text.Json.JsonSerializerOptions options)
+        public override void WriteAsPropertyName(global::System.Text.Json.Utf8JsonWriter writer, TSelf value, global::System.Text.Json.JsonSerializerOptions options)
             => writer.WritePropertyName(value.Value.ToString());
     }
 
-    public class SystemTextJsonConverter<TStruct> : JsonConverter<TStruct>
-        where TStruct : IStructId, IParsable<TStruct>, INewable<TStruct>
+    public class SystemTextJsonConverter<TSelf> : JsonConverter<TSelf>
+        where TSelf : IStructId, IParsable<TSelf>, INewable<TSelf>
     {
-        public override TStruct Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            => TStruct.New(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."));
+        public override TSelf Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            => TSelf.New(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."));
 
-        public override void Write(Utf8JsonWriter writer, TStruct value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, TSelf value, JsonSerializerOptions options)
             => writer.WriteStringValue(value.Value);
 
-        public override TStruct ReadAsPropertyName(ref global::System.Text.Json.Utf8JsonReader reader, global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options)
-           => TStruct.New(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."));
+        public override TSelf ReadAsPropertyName(ref global::System.Text.Json.Utf8JsonReader reader, global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options)
+           => TSelf.New(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."));
 
-        public override void WriteAsPropertyName(global::System.Text.Json.Utf8JsonWriter writer, TStruct value, global::System.Text.Json.JsonSerializerOptions options)
+        public override void WriteAsPropertyName(global::System.Text.Json.Utf8JsonWriter writer, TSelf value, global::System.Text.Json.JsonSerializerOptions options)
             => writer.WritePropertyName(value.Value);
     }
 #endif

@@ -5,8 +5,8 @@ using System.Text.Json.Serialization;
 using StructId;
 
 #if NET7_0_OR_GREATER
-[JsonConverter(typeof(StructIdConverters.SystemTextJsonConverter<TStruct, TValue>))]
+[JsonConverter(typeof(StructIdConverters.SystemTextJsonConverter<TSelf, TValue>))]
 #endif
-readonly partial record struct TStruct
+readonly partial record struct TSelf
 {
 }

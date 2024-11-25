@@ -2,8 +2,8 @@
 
 using StructId;
 
-readonly partial record struct SStruct : INewable<SStruct>
+readonly partial record struct Self : INewable<Self>
 {
     /// <inheritdoc/>
-    public static SStruct New(string value) => new(value);
+    public static Self New(string value) => new(value);
 }

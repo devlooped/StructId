@@ -14,10 +14,10 @@ public static partial class StructIdConverters
     /// <summary>
     /// Base class for type converters for <see cref="IStructId"/>.
     /// </summary>
-    /// <typeparam name="TStruct">Type of target struct id.</typeparam>
-    public abstract class StringTypeConverter<TStruct> : TypeConverter where TStruct : IStructId
+    /// <typeparam name="TSelf">Type of target struct id.</typeparam>
+    public abstract class StringTypeConverter<TSelf> : TypeConverter where TSelf : IStructId
     {
-        protected abstract TStruct Create(string value);
+        protected abstract TSelf Create(string value);
 
         /// <inheritdoc/>
         public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType) => sourceType == typeof(string);
@@ -27,7 +27,7 @@ public static partial class StructIdConverters
         {
             string s => Create(s),
             null => null,
-            _ => throw new ArgumentException($"Cannot convert from {value} to {typeof(TStruct).Name}", nameof(value))
+            _ => throw new ArgumentException($"Cannot convert from {value} to {typeof(TSelf).Name}", nameof(value))
         };
 
         /// <inheritdoc/>
@@ -38,7 +38,7 @@ public static partial class StructIdConverters
                 return value switch
                 {
                     string id => id,
-                    TStruct id => id.Value,
+                    TSelf id => id.Value,
                     null => null,
                     _ => throw new ArgumentException($"Cannot convert {value} to string", nameof(value))
                 };

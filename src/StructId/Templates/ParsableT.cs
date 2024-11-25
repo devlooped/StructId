@@ -4,15 +4,15 @@
 using System.Diagnostics.CodeAnalysis;
 using System;
 
-readonly partial record struct TStruct : IParsable<TStruct>
+readonly partial record struct TSelf : IParsable<TSelf>
 {
-    public static TStruct Parse(string s, IFormatProvider? provider) => new(TValue.Parse(s, provider));
+    public static TSelf Parse(string s, IFormatProvider? provider) => new(TValue.Parse(s, provider));
 
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TStruct result)
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TSelf result)
     {
         if (TValue.TryParse(s, provider, out var value))
         {
-            result = new TStruct(value);
+            result = new TSelf(value);
             return true;
         }
         result = default;

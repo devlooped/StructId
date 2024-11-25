@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using StructId;
 
-partial record struct TValue : IParsable<TValue>
+partial record struct TValue : IParsable<TValue>, IComparable<TValue>
 {
     public static TValue Parse(string s, IFormatProvider? provider)
         => s is null ? throw new ArgumentNullException(nameof(s)) : new TValue();
@@ -17,12 +17,14 @@ partial record struct TValue : IParsable<TValue>
         result = default;
         return false;
     }
+
+    public int CompareTo(TValue other) => other.CompareTo(this);
 }
 
-readonly partial record struct SStruct(string Value) : IStructId
+readonly partial record struct Self(string Value) : IStructId
 {
 }
 
-readonly partial record struct TStruct(TValue Value) : IStructId<TValue>
+readonly partial record struct TSelf(TValue Value) : IStructId<TValue>
 {
 }

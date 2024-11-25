@@ -76,8 +76,8 @@ public abstract class TemplateGenerator(string referenceType, string stringTempl
             .Replace("namespace StructId;", $"namespace {args.TargetNamespace};")
             .Replace("using StructId;", $"using {args.TargetNamespace};")
             // Simple names suffices since we emit a partial in the same namespace
-            .Replace("TStruct", args.StructId.Name)
-            .Replace("SStruct", args.StructId.Name)
+            .Replace("TSelf", args.StructId.Name)
+            .Replace("Self", args.StructId.Name)
             .Replace("TValue", args.ValueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
 
         // parse template into a C# compilation unit

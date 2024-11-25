@@ -4,7 +4,7 @@
 using Newtonsoft.Json;
 using StructId;
 
-[JsonConverter(typeof(StructIdConverters.NewtonsoftJsonConverter<SStruct>))]
-readonly partial record struct SStruct
+[JsonConverter(typeof(StructIdConverters.NewtonsoftJsonConverter<Self>))]
+readonly partial record struct Self
 {
 }

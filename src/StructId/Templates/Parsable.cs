@@ -4,16 +4,16 @@
 using System.Diagnostics.CodeAnalysis;
 using System;
 
-readonly partial record struct SStruct : IParsable<SStruct>
+readonly partial record struct Self : IParsable<Self>
 {
-    public static SStruct Parse(string s, IFormatProvider? provider)
+    public static Self Parse(string s, IFormatProvider? provider)
         => s is null ? throw new ArgumentNullException(nameof(s)) : new(s);
 
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out SStruct result)
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out Self result)
     {
         if (s is not null)
         {
-            result = new SStruct(s);
+            result = new Self(s);
             return true;
         }
         result = default;

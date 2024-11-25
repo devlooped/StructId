@@ -8,30 +8,30 @@ namespace StructId;
 
 public static partial class StructIdConverters
 {
-    public class NewtonsoftJsonConverter<TStruct, TValue> : JsonConverter<TStruct>
-        where TStruct : IStructId<TValue>, IParsable<TStruct>, INewable<TStruct, TValue>
+    public class NewtonsoftJsonConverter<TSelf, TValue> : JsonConverter<TSelf>
+        where TSelf : IStructId<TValue>, IParsable<TSelf>, INewable<TSelf, TValue>
         where TValue : struct
     {
-        public override void WriteJson(JsonWriter writer, TStruct? id, JsonSerializer serializer) 
+        public override void WriteJson(JsonWriter writer, TSelf? id, JsonSerializer serializer) 
             => serializer.Serialize(writer, id == null ? null : id.Value);
 
-        public override TStruct? ReadJson(JsonReader reader, Type objectType, TStruct? existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TSelf? ReadJson(JsonReader reader, Type objectType, TSelf? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var result = serializer.Deserialize<TValue?>(reader);
-            return result.HasValue ? TStruct.New(result.Value) : default;
+            return result.HasValue ? TSelf.New(result.Value) : default;
         }
     }
 
-    public class NewtonsoftJsonConverter<TStruct> : JsonConverter<TStruct>
-        where TStruct : IStructId, IParsable<TStruct>, INewable<TStruct>
+    public class NewtonsoftJsonConverter<TSelf> : JsonConverter<TSelf>
+        where TSelf : IStructId, IParsable<TSelf>, INewable<TSelf>
     {
-        public override void WriteJson(JsonWriter writer, TStruct? id, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, TSelf? id, JsonSerializer serializer)
             => serializer.Serialize(writer, id == null ? null : id.Value);
 
-        public override TStruct? ReadJson(JsonReader reader, Type objectType, TStruct? existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TSelf? ReadJson(JsonReader reader, Type objectType, TSelf? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var result = serializer.Deserialize<string?>(reader);
-            return result is not null ? TStruct.New(result) : default;
+            return result is not null ? TSelf.New(result) : default;
         }
     }
 }
