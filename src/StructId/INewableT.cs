@@ -3,13 +3,13 @@
 namespace StructId;
 
 /// <summary>
-/// Interface implemented by <see cref="IStructId"/> and <see cref="IStructId{T}"/> 
+/// Interface implemented by <see cref="IStructId{T}"/> 
 /// that support creating new instances of the identifier.
 /// </summary>
-public interface INewable<Self, TValue>
+public interface INewable<TSelf, TValue>
 {
     /// <summary>
     /// Creates a new identifier from the given identifier value.
     /// </summary>
-    public abstract static Self New(TValue value);
+    public abstract static TSelf New(TValue value);
 }
