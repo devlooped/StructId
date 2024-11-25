@@ -17,6 +17,7 @@ public class RecordCodeFixTests
     {
         var test = new CSharpCodeFixTest<RecordAnalyzer, RecordCodeFix, DefaultVerifier>
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;
@@ -46,6 +47,7 @@ public class RecordCodeFixTests
     {
         var test = new CSharpCodeFixTest<RecordAnalyzer, RecordCodeFix, DefaultVerifier>
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;
@@ -75,6 +77,7 @@ public class RecordCodeFixTests
     {
         var test = new CSharpCodeFixTest<RecordAnalyzer, RecordCodeFix, DefaultVerifier>
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;

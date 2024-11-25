@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <TemplateCode Include="..\StructId\Templates\*.cs" Link="StructId\%(Filename)%(Extension)" />
+    <UpToDateCheck Include="@(TemplateCode)"/>
   </ItemGroup>
 
   <Target Name="CopyTemplateCode" Inputs="@(TemplateCode)" Outputs="@(TemplateCode -> '$(IntermediateOutputPath)Templates\%(Filename).txt')">
