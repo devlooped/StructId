@@ -6,7 +6,7 @@ namespace StructId;
 
 [Generator(LanguageNames.CSharp)]
 public class NewtonsoftJsonGenerator() : TemplateGenerator(
-    "Newtonsoft.Json.JsonConverter",
+    "Newtonsoft.Json.JsonConverter`1",
     ThisAssembly.Resources.Templates.NewtonsoftJsonConverter.Text,
     ThisAssembly.Resources.Templates.NewtonsoftJsonConverterT.Text,
     ReferenceCheck.TypeExists)
@@ -17,7 +17,7 @@ public class NewtonsoftJsonGenerator() : TemplateGenerator(
 
         context.RegisterSourceOutput(
             context.CompilationProvider
-            .Select((x, _) => x.GetTypeByMetadataName("Newtonsoft.Json.JsonConverter")),
+            .Select((x, _) => x.GetTypeByMetadataName("Newtonsoft.Json.JsonConverter`1")),
             (context, source) =>
             {
                 if (source == null)
