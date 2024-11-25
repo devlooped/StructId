@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace StructId.Functional;
 
@@ -30,10 +31,19 @@ public class FunctionalTests
         var user = new User(new UserId(1), "User", new Wallet(new WalletId("1234"), "Wallet"));
 
         var json = JsonConvert.SerializeObject(product, Formatting.Indented);
+
+        // Serialized as a primitive
+        Assert.Equal(JTokenType.String, JObject.Parse(json).Property("Id")!.Value.Type);
+
         var product2 = JsonConvert.DeserializeObject<Product>(json);
         Assert.Equal(product, product2);
 
         json = JsonConvert.SerializeObject(user, Formatting.Indented);
+
+        // Serialized as a primitive
+        Assert.Equal(JTokenType.Integer, JObject.Parse(json).Property("Id")!.Value.Type);
+        Assert.Equal(JTokenType.String, JObject.Parse(json).SelectToken("$.Wallet.Id")!.Type);
+
         var user2 = JsonConvert.DeserializeObject<User>(json);
         Assert.Equal(user, user2);
     }

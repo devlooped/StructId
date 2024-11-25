@@ -10,6 +10,7 @@ public class ConstructorGeneratorTests
     {
         var test = new CSharpSourceGeneratorTest<ConstructorGenerator, DefaultVerifier>
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,
             TestState =
             {
@@ -33,6 +34,7 @@ public class ConstructorGeneratorTests
     {
         var test = new CSharpSourceGeneratorTest<ConstructorGenerator, DefaultVerifier>
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,
             TestState =
             {
@@ -56,6 +58,7 @@ public class ConstructorGeneratorTests
     {
         var test = new CSharpSourceGeneratorTest<ConstructorGenerator, DefaultVerifier>
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,
             TestState =
             {

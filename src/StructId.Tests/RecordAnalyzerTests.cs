@@ -15,6 +15,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             public readonly record struct UserId(int Value);
@@ -29,6 +30,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             public record struct UserId(int Value);
@@ -43,6 +45,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;
@@ -62,6 +65,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;
@@ -81,6 +85,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;
@@ -102,6 +107,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;
@@ -124,6 +130,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;
@@ -143,6 +150,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;
@@ -162,6 +170,7 @@ public class RecordAnalyzerTests
     {
         var test = new Test
         {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestCode =
             """
             using StructId;

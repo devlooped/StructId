@@ -8,7 +8,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace StructId;
 
-public enum TypeCheck
+public enum ReferenceCheck
 {
     /// <summary>
     /// The check involves ensuring the type exists in the compilation.
@@ -20,18 +20,18 @@ public enum TypeCheck
     ValueIsType,
 }
 
-public abstract class TemplateGenerator(string valueType, string stringTemplate, string typeTemplate, TypeCheck interfaceCheck = TypeCheck.ValueIsType) : IIncrementalGenerator
+public abstract class TemplateGenerator(string referenceType, string stringTemplate, string typeTemplate, ReferenceCheck referenceCheck = ReferenceCheck.ValueIsType) : IIncrementalGenerator
 {
-    record struct TemplateArgs(string TargetNamespace, INamedTypeSymbol StructId, INamedTypeSymbol ValueType, INamedTypeSymbol InterfaceType, INamedTypeSymbol StringType);
+    record struct TemplateArgs(string TargetNamespace, INamedTypeSymbol StructId, INamedTypeSymbol ValueType, INamedTypeSymbol ReferenceType, INamedTypeSymbol StringType);
 
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    public virtual void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var targetNamespace = context.AnalyzerConfigOptionsProvider
             .Select((x, _) => x.GlobalOptions.TryGetValue("build_property.StructIdNamespace", out var ns) ? ns : "StructId");
 
         // Locate the required types
         var types = context.CompilationProvider
-            .Select((x, _) => (InterfaceType: x.GetTypeByMetadataName(valueType), StringType: x.GetTypeByMetadataName("System.String")));
+            .Select((x, _) => (ReferenceType: x.GetTypeByMetadataName(referenceType), StringType: x.GetTypeByMetadataName("System.String")));
 
         var ids = context.CompilationProvider
             .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
@@ -40,11 +40,11 @@ public abstract class TemplateGenerator(string valueType, string stringTemplate,
 
         var combined = ids.Combine(types)
             // NOTE: we never generate for compilations that don't have the specified value interface type
-            .Where(x => x.Right.InterfaceType != null || x.Right.StringType == null)
+            .Where(x => x.Right.ReferenceType != null || x.Right.StringType == null)
             .Combine(targetNamespace)
             .Select((x, _) =>
             {
-                var ((structId, (interfaceType, stringType)), targetNamespace) = x;
+                var ((structId, (referenceType, stringType)), targetNamespace) = x;
 
                 // The value type is either a generic type argument for IStructId<T>, or the string type 
                 // for the non-generic IStructId
@@ -53,15 +53,14 @@ public abstract class TemplateGenerator(string valueType, string stringTemplate,
                     .TypeArguments.OfType<INamedTypeSymbol>().FirstOrDefault() ??
                     stringType!;
 
-                return new TemplateArgs(targetNamespace, structId, valueType, interfaceType!, stringType!);
+                return new TemplateArgs(targetNamespace, structId, valueType, referenceType!, stringType!);
             });
 
-        if (interfaceCheck == TypeCheck.ValueIsType)
-            combined = combined.Where(x => x.ValueType.Is(x.InterfaceType));
+        if (referenceCheck == ReferenceCheck.ValueIsType)
+            combined = combined.Where(x => x.ValueType.Is(x.ReferenceType));
 
         context.RegisterImplementationSourceOutput(combined, GenerateCode);
     }
-
     void GenerateCode(SourceProductionContext context, TemplateArgs args)
     {
         var ns = args.StructId.ContainingNamespace.Equals(args.StructId.ContainingModule.GlobalNamespace, SymbolEqualityComparer.Default)
