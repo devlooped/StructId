@@ -1,4 +1,4 @@
-![Icon](assets/img/icon-32.png) StrucTId
+![Icon](assets/img/icon-32.png) StructId
 ============
 
 [![Version](https://img.shields.io/nuget/vpre/StructId.svg?color=royalblue)](https://www.nuget.org/packages/StructId)
