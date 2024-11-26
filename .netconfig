@@ -120,3 +120,15 @@
 
 	etag = 19087699f05396205e6b050d999a43b175bd242f6e8fac86f6df936310178b03
 	weak
+[file "src/Sample/MinimalApi/Ipsum.cs"]
+	url = https://github.com/devlooped/catbag/blob/main/System/Ipsum.cs
+	sha = fd47beec35da6ca8db79928f353ca322be2ee1f6
+
+	etag = 7a210949b41605c0bdaf13fb1d47339a274b8b941c27321950a32d7d4c63a049
+	weak
+[file "src/Sample/MvcWebApp/Ipsum.cs"]
+	url = https://github.com/devlooped/catbag/blob/main/System/Ipsum.cs
+	sha = fd47beec35da6ca8db79928f353ca322be2ee1f6
+
+	etag = 7a210949b41605c0bdaf13fb1d47339a274b8b941c27321950a32d7d4c63a049
+	weak

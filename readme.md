@@ -13,7 +13,88 @@ maximum performance, minimal memory allocation typed identifiers.
 ```csharp
 public readonly partial record struct UserId : IStructId<Guid>;
 ```
+
+Unlike other such libraries for .NET, StructId introduces several unique features:
+
+1. **Zero** run-time dependencies: everything is source-generated in your project.
+1. **Zero** configuration: additional features are automatically added as you reference 
+   dependencies that require them. For example: if your project references EF Core, 
+   Dapper, or Newtonsoft.Json, the corresponding serialization and deserialization 
+   code will be emitted without any additional configuration.
+1. Leverages newest language and runtime features for cleaner and more efficient code, 
+   such as:
+   1. IParsable<T> for parsing from strings.
+   1. Static interface members, for consistent `TSelf.New(TValue value)` factory 
+      method and proper type constraint (via a provided `INewable<TSelf, TValue>` interface).
+
+
+## Usage
+
+After installing the [StructId package](https://nuget.org/packages/StructId), the project 
+(with a direct reference to the `StructId` package) will contain the main interfaces 
+`IStruct` (for string-typed IDs) and `IStructId<TValue>`. 
+
+> NOTE: the package only needs to be installed in the top-level project in your solution, 
+> since analyzers/generators will [automatically propagate to referencing projects]((https://github.com/dotnet/sdk/issues/1212)).
+
+The package is a [development dependency](https://github.com/NuGet/Home/wiki/DevelopmentDependency-support-for-PackageReference), 
+meaning it will not contribute to any run-time dependencies of your project (or package if 
+you publish one).
+
+The default target namespace for the included types will match the `RootNamespace` of the 
+project, but can be customized by setting the `StructIdNamespace` property.
+
+You can simply declare a new ID type by implementing `IStructId<TValue>`:
+
+```csharp
+public readonly partial record struct UserId : IStructId<Guid>;
+```
+
+If the declaration is missing `partial`, `readonly` or `record struct`, a codefix will
+be offered to correct it.
+
+![codefix](https://raw.githubusercontent.com/devlooped/StructId/main/assets/img/record-codefix.png)
+
+The relevant constructor and `Value` property will be generated for you, as well as 
+as a few other common interfaces, such as `IComparable<T>`, `IParsable<TSelf>`, etc.
+
+### EF Core
+
+If you are using EF Core, the package will automatically generate the necessary value converters, 
+as well as an `UseStructId` extension method for `DbContextOptionsBuilder` to set them up:
+
+```csharp
+var options = new DbContextOptionsBuilder<Context>()
+    .UseSqlite("Data Source=ef.db")
+    .UseStructId()
+    .Options;
+
+using var context = new Context(options);
+// access your entities using struct ids
+```
+
+Alternatively, you can also invoke that method in the `OnConfiguring` method of your context:
+```csharp
+protected override void OnConfiguring(DbContextOptionsBuilder builder) => builder.UseStructId();
+```
+
 <!-- #content -->
+<!-- #ci -->
+
+# Dogfooding
+
+[![CI Version](https://img.shields.io/endpoint?url=https://shields.kzu.app/vpre/StructId/main&label=nuget.ci&color=brightgreen)](https://pkg.kzu.app/index.json)
+[![Build](https://github.com/devlooped/StructId/workflows/build/badge.svg?branch=main)](https://github.com/devlooped/StructId/actions)
+
+We also produce CI packages from branches and pull requests so you can dogfood builds as quickly as they are produced. 
+
+The CI feed is `https://pkg.kzu.app/index.json`. 
+
+The versioning scheme for packages is:
+
+- PR builds: *42.42.42-pr*`[NUMBER]`
+- Branch builds: *42.42.42-*`[BRANCH]`.`[COMMITS]`
+
 <!-- include https://github.com/devlooped/sponsors/raw/main/footer.md -->
 # Sponsors 
 

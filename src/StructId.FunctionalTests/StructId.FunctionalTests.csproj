@@ -8,11 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Scriban" Version="5.12.0" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,11 +28,17 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Xunit.Abstractions" />
-  </ItemGroup>
 
-  <ItemGroup>
     <StructId Include="..\StructId\*.cs" Link="StructId\%(RecursiveDir)%(Filename)%(Extension)" />
+
+    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll"/>
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
+
+  <ItemGroup>
+    <None Update="ef.db" CopyToOutputDirectory="PreserveNewest"/>
+    <UpToDateCheck Include="@(StructId)"/>
+  </ItemGroup>
+
 </Project>

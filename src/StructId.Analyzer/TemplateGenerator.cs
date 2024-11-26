@@ -22,7 +22,7 @@ public enum ReferenceCheck
 
 public abstract class TemplateGenerator(string referenceType, string stringTemplate, string typeTemplate, ReferenceCheck referenceCheck = ReferenceCheck.ValueIsType) : IIncrementalGenerator
 {
-    record struct TemplateArgs(string TargetNamespace, INamedTypeSymbol StructId, INamedTypeSymbol ValueType, INamedTypeSymbol ReferenceType, INamedTypeSymbol StringType);
+    protected record struct TemplateArgs(string TargetNamespace, INamedTypeSymbol StructId, INamedTypeSymbol ValueType, INamedTypeSymbol ReferenceType, INamedTypeSymbol StringType);
 
     public virtual void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -59,8 +59,13 @@ public abstract class TemplateGenerator(string referenceType, string stringTempl
         if (referenceCheck == ReferenceCheck.ValueIsType)
             combined = combined.Where(x => x.ValueType.Is(x.ReferenceType));
 
+        OnInitialize(context, combined);
+
         context.RegisterImplementationSourceOutput(combined, GenerateCode);
     }
+
+    protected virtual void OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source) { }
+
     void GenerateCode(SourceProductionContext context, TemplateArgs args)
     {
         var ns = args.StructId.ContainingNamespace.Equals(args.StructId.ContainingModule.GlobalNamespace, SymbolEqualityComparer.Default)
