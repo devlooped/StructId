@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dapper;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -75,12 +77,26 @@ public class FunctionalTests
         Assert.Equal(product, product2);
     }
 
+    [Fact]
+    public void Dapper()
+    {
+        using var connection = new SqliteConnection("Data Source=dapper.db")
+            .UseStructId();
+
+        connection.Open();
+
+        // Seed data
+        var productId = Guid.NewGuid();
+        var product = new Product(new ProductId(productId), "Product");
+        connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", product);
+        var product2 = connection.QueryFirst<Product>("SELECT * FROM Products WHERE Id = @Id", new { Id = productId });
+        Assert.Equal(product, product2);
+    }
+
     public class Context : DbContext
     {
         public Context(DbContextOptions<Context> options) : base(options) { }
         public DbSet<Product> Products { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder model) => model.Entity<Product>().HasKey(e => e.Id);
-
-        protected override void OnConfiguring(DbContextOptionsBuilder builder) => builder.UseStructId();
     }
 }

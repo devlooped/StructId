@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -59,12 +60,12 @@ public abstract class TemplateGenerator(string referenceType, string stringTempl
         if (referenceCheck == ReferenceCheck.ValueIsType)
             combined = combined.Where(x => x.ValueType.Is(x.ReferenceType));
 
-        OnInitialize(context, combined);
+        combined = OnInitialize(context, combined);
 
         context.RegisterImplementationSourceOutput(combined, GenerateCode);
     }
 
-    protected virtual void OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source) { }
+    protected virtual IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source) => source;
 
     void GenerateCode(SourceProductionContext context, TemplateArgs args)
     {
