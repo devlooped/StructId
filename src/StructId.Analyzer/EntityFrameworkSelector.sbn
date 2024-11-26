@@ -36,7 +36,7 @@ public static class StructIdDbContextOptionsBuilderExtensions
             foreach (var converter in baseConverters)
                 yield return converter;
 
-            modelClrType = Unwrap(modelClrType);
+            modelClrType = Unwrap(modelClrType) ?? modelClrType;
             providerClrType = Unwrap(providerClrType);
 
             {{~ for id in Ids ~}}
@@ -48,7 +48,7 @@ public static class StructIdDbContextOptionsBuilderExtensions
             {{~ end ~}}
         }
 
-        static Type Unwrap(Type? type)
+        static Type? Unwrap(Type? type)
         {
             if (type is null) 
                 return null;
