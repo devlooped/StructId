@@ -23,7 +23,7 @@ partial record struct ProductId
 public class FunctionalTests
 {
     [Fact]
-    public void Test()
+    public void EqualityTest()
     {
         var guid = Guid.NewGuid();
         var id1 = new ProductId(guid);
@@ -31,6 +31,17 @@ public class FunctionalTests
 
         Assert.Equal(id1, id2);
         Assert.True(id1 == id2);
+    }
+
+    [Fact]
+    public void ImplicitAndExplicitCast()
+    {
+        var guid = Guid.NewGuid();
+        var id = new ProductId(guid);
+        Guid guid2 = id;
+        var id2 = (ProductId)guid2;
+        Assert.Equal(guid, guid2);
+        Assert.Equal(id, id2);
     }
 
     [Fact]
