@@ -72,6 +72,6 @@ public static partial class TestExtensions
     [GeneratedRegex(@"\bTSelf\b")]
     private static partial Regex TSelfExpr();
 
-    [GeneratedRegex(@"\bTValue\b")]
+    [GeneratedRegex(@"\bTId\b")]
     private static partial Regex TValueExpr();
 }

@@ -30,9 +30,9 @@ public class EntityFrameworkGenerator() : TemplateGenerator(
         context.AddSource($"ValueConverterSelector.cs", output);
     }
 
-    record StructIdModel(string TSelf, string TValueType)
+    record StructIdModel(string TSelf, string TIdType)
     {
-        public string TValue => TValueType switch
+        public string TId => TIdType switch
         {
             "System.String" => "string",
             "System.Int32" => "int",
@@ -53,7 +53,7 @@ public class EntityFrameworkGenerator() : TemplateGenerator(
             "System.UInt16" => "ushort",
             "System.Int16" => "short",
             "System.Object" => "object",
-            _ => TValueType
+            _ => TIdType
         };
     }
 

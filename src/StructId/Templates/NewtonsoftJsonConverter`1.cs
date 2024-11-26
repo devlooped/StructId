@@ -8,16 +8,16 @@ namespace StructId;
 
 public static partial class StructIdConverters
 {
-    public class NewtonsoftJsonConverter<TSelf, TValue> : JsonConverter<TSelf>
-        where TSelf : IStructId<TValue>, IParsable<TSelf>, INewable<TSelf, TValue>
-        where TValue : struct
+    public class NewtonsoftJsonConverter<TSelf, TId> : JsonConverter<TSelf>
+        where TSelf : IStructId<TId>, IParsable<TSelf>, INewable<TSelf, TId>
+        where TId : struct
     {
         public override void WriteJson(JsonWriter writer, TSelf? id, JsonSerializer serializer) 
             => serializer.Serialize(writer, id == null ? null : id.Value);
 
         public override TSelf? ReadJson(JsonReader reader, Type objectType, TSelf? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var result = serializer.Deserialize<TValue?>(reader);
+            var result = serializer.Deserialize<TId?>(reader);
             return result.HasValue ? TSelf.New(result.Value) : default;
         }
     }

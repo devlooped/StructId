@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>StructId</PackageId>
+    <PackageId>StrucTId</PackageId>
     <DevelopmentDependency>true</DevelopmentDependency>
     <Description>Stronly typed ids using readonly record structs.s</Description>
     <PackageTags>dotnet record struct typed id</PackageTags>

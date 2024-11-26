@@ -1,4 +1,4 @@
-![Icon](img/icon-32.png) StructId
+![Icon](assets/img/icon-32.png) StrucTId
 ============
 
 [![Version](https://img.shields.io/nuget/vpre/StructId.svg?color=royalblue)](https://www.nuget.org/packages/StructId)
@@ -24,15 +24,15 @@ Unlike other such libraries for .NET, StructId introduces several unique feature
 1. Leverages newest language and runtime features for cleaner and more efficient code, 
    such as:
    1. IParsable<T> for parsing from strings.
-   1. Static interface members, for consistent `TSelf.New(TValue value)` factory 
-      method and proper type constraint (via a provided `INewable<TSelf, TValue>` interface).
+   1. Static interface members, for consistent `TSelf.New(TId value)` factory 
+      method and proper type constraint (via a provided `INewable<TSelf, TId>` interface).
 
 
 ## Usage
 
 After installing the [StructId package](https://nuget.org/packages/StructId), the project 
 (with a direct reference to the `StructId` package) will contain the main interfaces 
-`IStruct` (for string-typed IDs) and `IStructId<TValue>`. 
+`IStruct` (for string-typed IDs) and `IStructId<TId>`. 
 
 > NOTE: the package only needs to be installed in the top-level project in your solution, 
 > since analyzers/generators will [automatically propagate to referencing projects]((https://github.com/dotnet/sdk/issues/1212)).
@@ -44,7 +44,7 @@ you publish one).
 The default target namespace for the included types will match the `RootNamespace` of the 
 project, but can be customized by setting the `StructIdNamespace` property.
 
-You can simply declare a new ID type by implementing `IStructId<TValue>`:
+You can simply declare a new ID type by implementing `IStructId<TId>`:
 
 ```csharp
 public readonly partial record struct UserId : IStructId<Guid>;
