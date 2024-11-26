@@ -4,9 +4,7 @@
 using System.Text.Json.Serialization;
 using StructId;
 
-#if NET7_0_OR_GREATER
 [JsonConverter(typeof(StructIdConverters.SystemTextJsonConverter<Self>))]
-#endif
 readonly partial record struct Self
 {
 }
