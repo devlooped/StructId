@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="1.1.2" />
     <PackageReference Include="ThisAssembly.Resources" Version="2.0.9" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Scriban" Version="5.12.0" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,16 +33,16 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Xunit.Abstractions" />
-  </ItemGroup>
-
-  <ItemGroup>
+  
     <StructId Include="..\StructId\*.cs" Link="StructId\%(RecursiveDir)%(Filename)%(Extension)" />
-    <UpToDateCheck Include="@(TemplateCode)"/>
+
+    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll"/>
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
 
   <ItemGroup>
+    <UpToDateCheck Include="@(StructId)"/>
     <EmbeddedResource Include="@(StructId)" Type="Non-Resx" />
     <EmbeddedResource Include="..\StructId\Templates\*.cs" Link="StructId\Templates\%(Filename)%(Extension)" Type="Non-Resx"/>
   </ItemGroup>

@@ -15,6 +15,8 @@ public static class AnalysisExtensions
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable);
 
+    public static string ToFullName(this ISymbol symbol) => symbol.ToDisplayString(FullName);
+
     /// <summary>
     /// Checks whether the <paramref name="this"/> type inherits or implements the 
     /// <paramref name="baseTypeOrInterface"/> type, even if it's a generic type.

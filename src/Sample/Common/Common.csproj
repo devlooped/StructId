@@ -1,15 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <!-- 👇 StructId interfaces will use this namespace by default -->
+    <RootNamespace>Sample</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <RestoreSources>https://api.nuget.org/v3/index.json;$(PackageOutputPath)</RestoreSources>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="StructId" Version="42.254.378" />
+    <PackageReference Include="StructId" Version="42.*" />
   </ItemGroup>
 
 </Project>

@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
 using Sample;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.MapGet("/{id}", (UserId id) => new User(id, "kzu"));
+app.MapGet("/user/{id}", (UserId id) => new User(id, Ipsum.GetPhrase(3)));
+app.MapGet("/product/{id}", (ProductId id) => new Product(id, Ipsum.GetPhrase(5)));
 
 app.Run();
 
