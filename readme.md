@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/nuget/vpre/StructId.svg?color=royalblue)](https://www.nuget.org/packages/StructId)
 [![Downloads](https://img.shields.io/nuget/dt/StructId.svg?color=green)](https://www.nuget.org/packages/StructId)
 [![License](https://img.shields.io/github/license/devlooped/StructId.svg?color=blue)](https://github.com//devlooped/StructId/blob/main/license.txt)
-[![Build](https://github.com/devlooped/StructId/workflows/build/badge.svg?branch=main)](https://github.com/devlooped/StructId/actions)
+[![Build](https://github.com/devlooped/StructId/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/devlooped/StructId/actions)
 
 <!-- #content -->
 An opinionated strongly-typed ID library that uses `readonly record struct` in C# for 
