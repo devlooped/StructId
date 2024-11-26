@@ -42,9 +42,13 @@ public class ConstructorGenerator : IIncrementalGenerator
             $$"""
 
             [System.CodeDom.Compiler.GeneratedCode("StructId", "{{ThisAssembly.Info.InformationalVersion}}")]
-            partial {{kind}} {{symbol.Name}}({{type}} Value);
+            partial {{kind}} {{symbol.Name}}({{type}} Value)
+            {
+                public static implicit operator {{type}}({{symbol.Name}} id) => id.Value;
+                public static explicit operator {{symbol.Name}}({{type}} value) => new(value);
+            }
             """);
 
-        context.AddSource($"{symbol.ToFileName()}.ctor.cs", output.ToString());
+        context.AddSource($"{symbol.ToFileName()}.cs", output.ToString());
     }
 }
