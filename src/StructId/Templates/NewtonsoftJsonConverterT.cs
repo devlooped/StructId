@@ -4,7 +4,7 @@
 using Newtonsoft.Json;
 using StructId;
 
-[JsonConverter(typeof(StructIdConverters.NewtonsoftJsonConverter<TSelf, TValue>))]
+[JsonConverter(typeof(StructIdConverters.NewtonsoftJsonConverter<TSelf, TId>))]
 readonly partial record struct TSelf
 {
 }

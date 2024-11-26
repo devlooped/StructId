@@ -4,12 +4,12 @@
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StructId;
 
-readonly partial record struct TSelf : INewable<TSelf, TValue>
+readonly partial record struct TSelf : INewable<TSelf, TId>
 {
     /// <summary>
     /// Provides value conversion for Entity Framework Core
     /// </summary>
-    public partial class EntityFrameworkValueConverter : ValueConverter<TSelf, TValue>
+    public partial class EntityFrameworkValueConverter : ValueConverter<TSelf, TId>
     {
         public EntityFrameworkValueConverter() : this(null) { }
 

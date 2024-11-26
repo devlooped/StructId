@@ -83,7 +83,7 @@ public abstract class TemplateGenerator(string referenceType, string stringTempl
             // Simple names suffices since we emit a partial in the same namespace
             .Replace("TSelf", args.StructId.Name)
             .Replace("Self", args.StructId.Name)
-            .Replace("TValue", args.ValueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            .Replace("TId", args.ValueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
 
         // parse template into a C# compilation unit
         var parseable = CSharpSyntaxTree.ParseText(template).GetCompilationUnitRoot();
