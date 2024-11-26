@@ -78,6 +78,21 @@ Alternatively, you can also invoke that method in the `OnConfiguring` method of 
 protected override void OnConfiguring(DbContextOptionsBuilder builder) => builder.UseStructId();
 ```
 
+## Dapper
+
+If you are using Dapper, the package will automatically generate required `SqlMapper.TypeHandler<T>` 
+for your ID types. The `UseStructId` extension method for `IDbConnection` can be used to register 
+them as needed:
+
+```csharp
+using var connection = new SqliteConnection("Data Source=sqlite.db")
+
+connection.UseStructId();
+connection.Open();
+```
+
+The supported types are `Guid`, `int`, `long` and `string` for now.
+
 <!-- #content -->
 <!-- #ci -->
 

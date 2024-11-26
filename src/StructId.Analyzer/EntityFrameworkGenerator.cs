@@ -15,9 +15,11 @@ public class EntityFrameworkGenerator() : TemplateGenerator(
 {
     static readonly Template template = Template.Parse(ThisAssembly.Resources.EntityFrameworkSelector.Text);
 
-    protected override void OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source)
+    protected override IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source)
     {
         context.RegisterSourceOutput(source.Collect(), GenerateValueSelector);
+
+        return base.OnInitialize(context, source);
     }
 
     void GenerateValueSelector(SourceProductionContext context, ImmutableArray<TemplateArgs> args)

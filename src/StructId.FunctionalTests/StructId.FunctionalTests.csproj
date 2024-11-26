@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
@@ -31,14 +32,15 @@
 
     <StructId Include="..\StructId\*.cs" Link="StructId\%(RecursiveDir)%(Filename)%(Extension)" />
 
-    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll"/>
+    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll" />
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
 
   <ItemGroup>
-    <None Update="ef.db" CopyToOutputDirectory="PreserveNewest"/>
-    <UpToDateCheck Include="@(StructId)"/>
+    <None Update="dapper.db" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="ef.db" CopyToOutputDirectory="PreserveNewest" />
+    <UpToDateCheck Include="@(StructId)" />
   </ItemGroup>
 
 </Project>
