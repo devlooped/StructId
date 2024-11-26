@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,13 +15,7 @@ public record Product(ProductId Id, string Name);
 public record Wallet(WalletId Id, string Alias);
 public record User(UserId Id, string Name, Wallet Wallet);
 
-partial record struct ProductId
-{
-    public static implicit operator Guid(ProductId id) => id.Value;
-    public static explicit operator ProductId(Guid value) => new(value);
-}
-
-public class FunctionalTests
+public class FunctionalTests(ITestOutputHelper output)
 {
     [Fact]
     public void EqualityTest()
@@ -72,20 +67,32 @@ public class FunctionalTests
     public void EntityFramework()
     {
         var options = new DbContextOptionsBuilder<Context>()
-            .UseSqlite("Data Source=ef.db")
             .UseStructId()
+            .UseSqlite("Data Source=ef.db")
+            // Uncomment to see full SQL being run
+            // .EnableSensitiveDataLogging()
+            // .UseLoggerFactory(new LoggerFactory(output))
             .Options;
 
         using var context = new Context(options);
 
+        var id = ProductId.New();
+        var product = new Product(new ProductId(id), "Product");
+
         // Seed data
-        var productId = Guid.NewGuid();
-        var product = new Product(new ProductId(productId), "Product");
+        context.Products.Add(new Product(ProductId.New(), "Product1"));
         context.Products.Add(product);
+        context.Products.Add(new Product(ProductId.New(), "Product2"));
+
         context.SaveChanges();
 
-        var product2 = context.Products.First(x => productId == product.Id);
+        var product2 = context.Products.Where(x => x.Id == id).FirstOrDefault();
         Assert.Equal(product, product2);
+
+        Guid guid = id;
+
+        var product3 = context.Products.FirstOrDefault(x => guid == x.Id);
+        Assert.Equal(product, product3);
     }
 
     [Fact]
@@ -99,7 +106,11 @@ public class FunctionalTests
         // Seed data
         var productId = Guid.NewGuid();
         var product = new Product(new ProductId(productId), "Product");
+
+        connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", new Product(ProductId.New(), "Product1"));
         connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", product);
+        connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", new Product(ProductId.New(), "Product2"));
+
         var product2 = connection.QueryFirst<Product>("SELECT * FROM Products WHERE Id = @Id", new { Id = productId });
         Assert.Equal(product, product2);
     }
@@ -108,6 +119,20 @@ public class FunctionalTests
     {
         public Context(DbContextOptions<Context> options) : base(options) { }
         public DbSet<Product> Products { get; set; } = null!;
-        protected override void OnModelCreating(ModelBuilder model) => model.Entity<Product>().HasKey(e => e.Id);
+    }
+
+    class LoggerFactory(ITestOutputHelper output) : ILoggerFactory
+    {
+        public void AddProvider(ILoggerProvider provider) => throw new NotImplementedException();
+        public ILogger CreateLogger(string categoryName) => new Logger(output);
+        public void Dispose() { }
+
+        class Logger(ITestOutputHelper output) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+            public bool IsEnabled(LogLevel logLevel) => true;
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+                => output.WriteLine(formatter(state, exception));
+        }
     }
 }

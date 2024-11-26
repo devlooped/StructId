@@ -14,11 +14,6 @@ readonly partial record struct TSelf : INewable<TSelf, TId>
         public EntityFrameworkValueConverter() : this(null) { }
 
         public EntityFrameworkValueConverter(ConverterMappingHints? mappingHints = null)
-            : base(
-                id => id.Value,
-                value => TSelf.New(value),
-                mappingHints
-            )
-        { }
+            : base(id => id.Value, value => TSelf.New(value), mappingHints) { }
     }
 }
