@@ -27,4 +27,5 @@ readonly partial record struct Self(string Value) : IStructId
 
 readonly partial record struct TSelf(TId Value) : IStructId<TId>
 {
+    public TSelf(Guid _) : this(default(TId)) { }
 }

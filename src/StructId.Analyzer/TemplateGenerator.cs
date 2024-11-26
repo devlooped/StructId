@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -67,17 +66,18 @@ public abstract class TemplateGenerator(string referenceType, string stringTempl
 
     protected virtual IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source) => source;
 
-    void GenerateCode(SourceProductionContext context, TemplateArgs args)
+    void GenerateCode(SourceProductionContext context, TemplateArgs args) => AddFromTemplate(
+        context, args, $"{args.StructId.ToFileName()}.cs",
+        args.ValueType.Equals(args.StringType, SymbolEqualityComparer.Default) ? stringTemplate : typeTemplate);
+
+    protected static void AddFromTemplate(SourceProductionContext context, TemplateArgs args, string hintName, string template)
     {
         var ns = args.StructId.ContainingNamespace.Equals(args.StructId.ContainingModule.GlobalNamespace, SymbolEqualityComparer.Default)
             ? null
             : args.StructId.ContainingNamespace.ToDisplayString();
 
-        var template = args.ValueType.Equals(args.StringType, SymbolEqualityComparer.Default)
-            ? stringTemplate : typeTemplate;
-
         // replace tokens in the template
-        template = template
+        var replaced = template
             // Adjust to current target namespace
             .Replace("namespace StructId;", $"namespace {args.TargetNamespace};")
             .Replace("using StructId;", $"using {args.TargetNamespace};")
@@ -87,19 +87,21 @@ public abstract class TemplateGenerator(string referenceType, string stringTempl
             .Replace("TId", args.ValueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
 
         // parse template into a C# compilation unit
-        var parseable = CSharpSyntaxTree.ParseText(template).GetCompilationUnitRoot();
+        var syntax = CSharpSyntaxTree.ParseText(replaced).GetCompilationUnitRoot();
 
         // if we got a ns, move all members after a file-scoped namespace declaration
         if (ns != null)
         {
-            var members = parseable.Members;
+            var members = syntax.Members;
             var fsns = FileScopedNamespaceDeclaration(ParseName(ns).WithLeadingTrivia(Whitespace(" ")))
                 .WithLeadingTrivia(LineFeed)
                 .WithTrailingTrivia(LineFeed)
                 .WithMembers(members);
-            parseable = parseable.WithMembers(SingletonList<MemberDeclarationSyntax>(fsns));
+            syntax = syntax.WithMembers(SingletonList<MemberDeclarationSyntax>(fsns));
         }
 
-        context.AddSource($"{args.StructId.ToFileName()}.cs", SourceText.From(parseable.ToFullString(), Encoding.UTF8));
+        var output = syntax.ToFullString();
+
+        context.AddSource(hintName, SourceText.From(output, Encoding.UTF8));
     }
 }
