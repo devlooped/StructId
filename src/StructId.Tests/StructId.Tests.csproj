@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.SourceGenerators.Testing" Version="1.1.2" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="1.1.2" />
-    <PackageReference Include="ThisAssembly.Resources" Version="2.0.9" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.Resources" Version="2.0.10" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Scriban" Version="5.12.0" GeneratePathProperty="true" />
   </ItemGroup>
@@ -34,17 +34,22 @@
     <Using Include="Xunit" />
     <Using Include="Xunit.Abstractions" />
   
-    <StructId Include="..\StructId\*.cs" Link="StructId\%(RecursiveDir)%(Filename)%(Extension)" />
-
-    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll"/>
+    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll" Condition="Exists('$(PkgScriban)/lib/netstandard2.0/Scriban.dll')" />
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
 
   <ItemGroup>
-    <UpToDateCheck Include="@(StructId)"/>
-    <EmbeddedResource Include="@(StructId)" Type="Non-Resx" />
-    <EmbeddedResource Include="..\StructId\Templates\*.cs" Link="StructId\Templates\%(Filename)%(Extension)" Type="Non-Resx"/>
+    <StructId Include="..\StructId\*.cs" Link="StructId\%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <Target Name="AddTemplateCode" BeforeTargets="AssignTargetPaths;PrepareEmbeddedResources">
+    <ItemGroup>
+      <TemplateCode Include="..\StructId.Analyzer\obj\Templates\*.txt" />
+      <UpToDateCheckInput Include="@(TemplateCode);@(StructId)" />
+      <EmbeddedResource Include="@(StructId)" LogicalName="StructId.%(StructId.Filename)%(StructId.Extension)" Type="Non-Resx" />
+      <EmbeddedResource Include="@(TemplateCode)" Type="Non-Resx" Link="StructId\Templates\%(TemplateCode.Filename)%(TemplateCode.Extension)" LogicalName="StructId.Templates.%(TemplateCode.Filename)%(TemplateCode.Extension)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

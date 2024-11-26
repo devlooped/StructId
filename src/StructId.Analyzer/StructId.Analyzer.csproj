@@ -14,9 +14,9 @@
     <PackageReference Include="NuGetizer" Version="1.2.3" />
     <PackageReference Include="PolySharp" PrivateAssets="All" Version="1.15.0" />
     <PackageReference Include="Scriban" Version="5.12.0" PrivateAssets="all" />
-    <PackageReference Include="ThisAssembly.AssemblyInfo" Version="2.0.9" PrivateAssets="all" />
-    <PackageReference Include="ThisAssembly.Project" Version="2.0.9" PrivateAssets="all" />
-    <PackageReference Include="ThisAssembly.Resources" Version="2.0.9" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.AssemblyInfo" Version="2.0.10" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.Project" Version="2.0.10" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.Resources" Version="2.0.10" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,13 +25,15 @@
     <UpToDateCheck Include="@(TemplateCode);@(EmbeddedResource)" />
   </ItemGroup>
 
-  <Target Name="CopyTemplateCode" Inputs="@(TemplateCode)" Outputs="@(TemplateCode -> '$(IntermediateOutputPath)Templates\%(Filename).txt')">
-    <Copy SourceFiles="@(TemplateCode)" DestinationFiles="@(TemplateCode -> '$(IntermediateOutputPath)Templates\%(Filename).txt')" SkipUnchangedFiles="true" />
+  <Target Name="CopyTemplateCode" Inputs="@(TemplateCode)" Outputs="@(TemplateCode -> '$(BaseIntermediateOutputPath)Templates\%(Filename).txt')">
+    <Copy SourceFiles="@(TemplateCode)" DestinationFiles="@(TemplateCode -> '$(BaseIntermediateOutputPath)Templates\%(Filename).txt')" SkipUnchangedFiles="true" />
   </Target>
 
-  <Target Name="AddTemplateCode" DependsOnTargets="CopyTemplateCode" BeforeTargets="SplitResourcesByCulture">
+  <Target Name="AddTemplateCode" DependsOnTargets="CopyTemplateCode" BeforeTargets="AssignTargetPaths;SplitResourcesByCulture">
     <ItemGroup>
-      <EmbeddedResource Include="@(TemplateCode -> '$(IntermediateOutputPath)Templates\%(Filename).txt')" Link="Templates\%(TemplateCode.Filename).txt" Type="Non-Resx" />
+      <EmbeddedResource Include="@(TemplateCode -> '$(BaseIntermediateOutputPath)Templates\%(Filename).txt')" 
+                        Link="Templates\%(TemplateCode.Filename).txt"
+                        Type="Non-Resx" />
     </ItemGroup>
   </Target>
 

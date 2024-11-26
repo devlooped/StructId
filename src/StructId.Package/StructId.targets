@@ -3,11 +3,11 @@
   <PropertyGroup>
     <StructIdNamespace Condition="$(StructIdNamespace) == ''">$(RootNamespace)</StructIdNamespace>
     <StructIdNamespace Condition="$(StructIdNamespace) == ''">StructId</StructIdNamespace>
-    <StrictIdPathHash Condition="$(StructIdNamespace) != ''">$([MSBuild]::StableStringHash($(StructIdNamespace)))\</StrictIdPathHash>
+    <StructIdPathHash Condition="$(StructIdNamespace) != ''">$([MSBuild]::StableStringHash($(StructIdNamespace)))\</StructIdPathHash>
   </PropertyGroup>
 
   <ItemGroup>
-    <StructId Include="$(MSBuildThisFileDirectory)*.cs" Link="StructId\$(StrictIdPathHash)%(Filename)%(Extension)" />
+    <StructId Include="$(MSBuildThisFileDirectory)*.cs" Link="StructId\$(StructIdPathHash)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Target Name="CollectStructIds">

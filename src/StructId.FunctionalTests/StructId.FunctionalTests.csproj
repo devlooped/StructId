@@ -30,9 +30,9 @@
     <Using Include="Xunit" />
     <Using Include="Xunit.Abstractions" />
 
-    <StructId Include="..\StructId\*.cs" Link="StructId\%(RecursiveDir)%(Filename)%(Extension)" />
+    <StructId Include="..\StructId\*.cs" Link="StructId\%(Filename)%(Extension)" />
 
-    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll" />
+    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll" Condition="Exists('$(PkgScriban)/lib/netstandard2.0/Scriban.dll')" />
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
