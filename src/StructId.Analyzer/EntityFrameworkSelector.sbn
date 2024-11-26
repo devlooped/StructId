@@ -36,6 +36,9 @@ public static class StructIdDbContextOptionsBuilderExtensions
             foreach (var converter in baseConverters)
                 yield return converter;
 
+            modelClrType = Unwrap(modelClrType);
+            providerClrType = Unwrap(providerClrType);
+
             {{~ for id in Ids ~}}
             if (modelClrType == typeof({{ id.TSelf }}))
                 yield return converters.GetOrAdd((modelClrType, providerClrType), key => new ValueConverterInfo(
@@ -43,6 +46,14 @@ public static class StructIdDbContextOptionsBuilderExtensions
                     info => new {{ id.TSelf }}.EntityFrameworkValueConverter(info.MappingHints)));
 
             {{~ end ~}}
+        }
+
+        static Type Unwrap(Type? type)
+        {
+            if (type is null) 
+                return null;
+
+            return Nullable.GetUnderlyingType(type) ?? type;
         }
     }
 }
