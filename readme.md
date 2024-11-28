@@ -58,6 +58,16 @@ be offered to correct it.
 The relevant constructor and `Value` property will be generated for you, as well as 
 as a few other common interfaces, such as `IComparable<T>`, `IParsable<TSelf>`, etc.
 
+If you want to customize the primary constructor (i.e. to add custom attributes), 
+you can provide it yourself too:
+
+```csharp
+public readonly partial record struct ProductId(int Value) : IStructId<int>;
+```
+
+It must contain a single parameter named `Value` (and codefixes will offer to rename or 
+remove it if you don't need it anymore).
+
 ### EF Core
 
 If you are using EF Core, the package will automatically generate the necessary value converters, 

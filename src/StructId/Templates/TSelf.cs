@@ -26,11 +26,11 @@ partial record struct TId : ISpanParsable<TId>, IComparable<TId>
     public int CompareTo(TId other) => other.CompareTo(this);
 }
 
-readonly partial record struct Self(string Value) : IStructId
+readonly partial record struct Self : IStructId
 {
 }
 
-readonly partial record struct TSelf(TId Value) : IStructId<TId>
+readonly partial record struct TSelf : IStructId<TId>
 {
     public TSelf(Guid _) : this(default(TId)) { }
 }
