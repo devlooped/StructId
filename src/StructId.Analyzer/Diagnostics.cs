@@ -4,9 +4,6 @@ namespace StructId;
 
 public static class Diagnostics
 {
-    /// <summary>
-    /// SID001: StructId must be a partial readonly record struct.
-    /// </summary>
     public static DiagnosticDescriptor MustBeRecordStruct { get; } = new(
         "SID001",
         "Struct ids must be partial readonly record structs",
@@ -15,4 +12,13 @@ public static class Diagnostics
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         helpLinkUri: $"{ThisAssembly.Project.RepositoryUrl}/blob/{ThisAssembly.Project.RepositoryBranch}/docs/SID001.md");
+
+    public static DiagnosticDescriptor MustHaveValueConstructor { get; } = new(
+        "SID002",
+        "Struct id custom constructor must provide a single Value parameter",
+        "Custom constructor for '{0}' must have a Value parameter",
+        "Build",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        helpLinkUri: $"{ThisAssembly.Project.RepositoryUrl}/blob/{ThisAssembly.Project.RepositoryBranch}/docs/SID002.md");
 }

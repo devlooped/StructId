@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -12,12 +13,15 @@ namespace StructId;
 public class RecordAnalyzer : DiagnosticAnalyzer
 {
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
-        => ImmutableArray.Create(MustBeRecordStruct);
+        => ImmutableArray.Create(MustBeRecordStruct, MustHaveValueConstructor);
 
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution();
+
+        if (!Debugger.IsAttached)
+            context.EnableConcurrentExecution();
+
         context.RegisterSyntaxNodeAction(Analyze, SyntaxKind.ClassDeclaration);
         context.RegisterSyntaxNodeAction(Analyze, SyntaxKind.StructDeclaration);
         context.RegisterSyntaxNodeAction(Analyze, SyntaxKind.RecordDeclaration);
@@ -53,5 +57,21 @@ public class RecordAnalyzer : DiagnosticAnalyzer
             else
                 context.ReportDiagnostic(Diagnostic.Create(MustBeRecordStruct, typeDeclaration.Identifier.GetLocation(), symbol.Name));
         }
+
+        if (typeDeclaration.ParameterList is null)
+            return;
+
+        // If there are parameters, it must be only one, be named Value and be either 
+        // type string (if implementing IStructId) or the TId (if implementing IStructId<TId>)
+        if (typeDeclaration.ParameterList.Parameters.Count != 1)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(MustHaveValueConstructor, typeDeclaration.ParameterList.GetLocation(), symbol.Name));
+            return;
+        }
+
+        var parameter = typeDeclaration.ParameterList.Parameters[0];
+        if (parameter.Identifier.Text != "Value")
+            context.ReportDiagnostic(Diagnostic.Create(MustHaveValueConstructor, parameter.Identifier.GetLocation(), symbol.Name));
+
     }
 }

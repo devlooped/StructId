@@ -184,4 +184,24 @@ public class RecordAnalyzerTests
 
         await test.RunAsync();
     }
+
+    [Fact]
+    public async Task ReadonlyRecordStructWithNonValueConstructor()
+    {
+        var test = new Test
+        {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
+            TestCode =
+            """
+            using StructId;
+            
+            public readonly partial record struct UserId(int {|#0:value|}) : IStructId<int>; 
+            """,
+        }.WithAnalyzerStructId();
+
+        test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.MustHaveValueConstructor).WithLocation(0).WithArguments("UserId"));
+        test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(3, 59));
+
+        await test.RunAsync();
+    }
 }
