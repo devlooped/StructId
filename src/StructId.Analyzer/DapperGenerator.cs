@@ -7,7 +7,7 @@ using Scriban;
 namespace StructId;
 
 [Generator(LanguageNames.CSharp)]
-public class DapperGenerator() : TemplateGenerator(
+public class DapperGenerator() : BaseGenerator(
     "Dapper.SqlMapper+TypeHandler`1", "", "", ReferenceCheck.TypeExists)
 {
     static readonly Template template = Template.Parse(ThisAssembly.Resources.DapperExtensions.Text);

@@ -23,7 +23,7 @@ partial record struct TId : ISpanParsable<TId>, IComparable<TId>
     public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out TId result)
         => TryParse(s.ToString(), provider, out result);
 
-    public int CompareTo(TId other) => other.CompareTo(this);
+    public int CompareTo(TId other) => throw new NotImplementedException();
 }
 
 readonly partial record struct Self : IStructId

@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace StructId;
 
 [Generator(LanguageNames.CSharp)]
-public class NewtonsoftJsonGenerator() : TemplateGenerator(
+public class NewtonsoftJsonGenerator() : BaseGenerator(
     "Newtonsoft.Json.JsonConverter`1",
     ThisAssembly.Resources.Templates.NewtonsoftJsonConverter.Text,
     ThisAssembly.Resources.Templates.NewtonsoftJsonConverterT.Text,

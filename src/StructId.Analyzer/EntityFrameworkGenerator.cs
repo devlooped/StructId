@@ -7,7 +7,7 @@ using Scriban;
 namespace StructId;
 
 [Generator(LanguageNames.CSharp)]
-public class EntityFrameworkGenerator() : TemplateGenerator(
+public class EntityFrameworkGenerator() : BaseGenerator(
     "Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter`2",
     ThisAssembly.Resources.Templates.EntityFramework.Text,
     ThisAssembly.Resources.Templates.EntityFramework.Text,

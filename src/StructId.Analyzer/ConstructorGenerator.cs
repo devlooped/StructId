@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace StructId;
 
 [Generator(LanguageNames.CSharp)]
-public class ConstructorGenerator() : TemplateGenerator(
+public class ConstructorGenerator() : BaseGenerator(
     "System.Object",
     ThisAssembly.Resources.Templates.Constructor.Text,
     ThisAssembly.Resources.Templates.ConstructorT.Text,
