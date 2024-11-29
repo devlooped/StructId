@@ -20,7 +20,7 @@ public enum ReferenceCheck
     ValueIsType,
 }
 
-public abstract class TemplateGenerator(string referenceType, string stringTemplate, string typeTemplate, ReferenceCheck referenceCheck = ReferenceCheck.ValueIsType) : IIncrementalGenerator
+public abstract class BaseGenerator(string referenceType, string stringTemplate, string typeTemplate, ReferenceCheck referenceCheck = ReferenceCheck.ValueIsType) : IIncrementalGenerator
 {
     protected record struct TemplateArgs(string TargetNamespace, INamedTypeSymbol StructId, INamedTypeSymbol ValueType, INamedTypeSymbol ReferenceType, INamedTypeSymbol StringType);
 

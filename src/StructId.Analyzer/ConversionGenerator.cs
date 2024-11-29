@@ -3,7 +3,7 @@
 namespace StructId;
 
 [Generator(LanguageNames.CSharp)]
-public class ConversionGenerator() : TemplateGenerator(
+public class ConversionGenerator() : BaseGenerator(
     "System.Object",
     ThisAssembly.Resources.Templates.Conversion.Text,
     ThisAssembly.Resources.Templates.ConversionT.Text,
