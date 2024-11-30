@@ -34,12 +34,15 @@ public class DapperGenerator() : BaseGenerator(
         if (args.Length == 0)
             return;
 
-        var model = new SelectorModel(args.Select(x => new StructIdModel(x.StructId.ToFullName(), x.ValueType.Name)));
+        var model = new SelectorModel(
+            args.First().StructIdNamespace,
+            args.Select(x => new StructIdModel(x.StructId.ToFullName(), x.ValueType.Name)));
+
         var output = template.Render(model, member => member.Name);
         context.AddSource($"DapperExtensions.cs", output);
     }
 
     record StructIdModel(string TSelf, string TId);
 
-    record SelectorModel(IEnumerable<StructIdModel> Ids);
+    record SelectorModel(string Namespace, IEnumerable<StructIdModel> Ids);
 }

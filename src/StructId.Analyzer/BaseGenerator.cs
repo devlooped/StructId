@@ -22,7 +22,7 @@ public enum ReferenceCheck
 
 public abstract class BaseGenerator(string referenceType, string stringTemplate, string typeTemplate, ReferenceCheck referenceCheck = ReferenceCheck.ValueIsType) : IIncrementalGenerator
 {
-    protected record struct TemplateArgs(string TargetNamespace, INamedTypeSymbol StructId, INamedTypeSymbol ValueType, INamedTypeSymbol ReferenceType, INamedTypeSymbol StringType);
+    protected record struct TemplateArgs(string StructIdNamespace, INamedTypeSymbol StructId, INamedTypeSymbol ValueType, INamedTypeSymbol ReferenceType, INamedTypeSymbol StringType);
 
     public virtual void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -79,8 +79,8 @@ public abstract class BaseGenerator(string referenceType, string stringTemplate,
         // replace tokens in the template
         var replaced = template
             // Adjust to current target namespace
-            .Replace("namespace StructId;", $"namespace {args.TargetNamespace};")
-            .Replace("using StructId;", $"using {args.TargetNamespace};")
+            .Replace("namespace StructId;", $"namespace {args.StructIdNamespace};")
+            .Replace("using StructId;", $"using {args.StructIdNamespace};")
             // Simple names suffices since we emit a partial in the same namespace
             .Replace("TSelf", args.StructId.Name)
             .Replace("Self", args.StructId.Name)
