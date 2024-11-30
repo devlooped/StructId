@@ -40,7 +40,8 @@ public static class AnalysisExtensions
             if (iface.Is(baseTypeOrInterface))
                 return true;
 
-        if (@this.BaseType?.Name.Equals("object", StringComparison.OrdinalIgnoreCase) == true)
+        if (@this.BaseType?.Name.Equals("object", StringComparison.OrdinalIgnoreCase) == true &&
+            @this.BaseType?.Equals(baseTypeOrInterface, SymbolEqualityComparer.Default) != true)
             return false;
 
         return Is(@this.BaseType, baseTypeOrInterface);

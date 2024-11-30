@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
@@ -12,15 +13,15 @@ namespace StructId;
 [Generator(LanguageNames.CSharp)]
 public class TemplatedGenerator : IIncrementalGenerator
 {
-    record KnownTypes(INamedTypeSymbol String, INamedTypeSymbol? IStructId, INamedTypeSymbol? TStructId, INamedTypeSymbol? TStructIdT);
+    record KnownTypes(string StructIdNamespace, INamedTypeSymbol String, INamedTypeSymbol? IStructId, INamedTypeSymbol? TStructId, INamedTypeSymbol? TStructIdT);
     record IdTemplate(INamedTypeSymbol StructId, Template Template);
-    record Template(INamedTypeSymbol TSelf, ITypeSymbol TId, AttributeData Attribute, bool IsGenericTId)
+    record Template(INamedTypeSymbol TSelf, ITypeSymbol TId, AttributeData Attribute, string StructIdNamespace, bool IsGenericTId)
     {
         public Regex NameExpr { get; } = new Regex($@"\b{TSelf.Name}\b", RegexOptions.Compiled | RegexOptions.Multiline);
 
-        public string Text { get; } = GetTemplateCode(TSelf, TId, Attribute);
+        public string Text { get; } = GetTemplateCode(TSelf, TId, Attribute, StructIdNamespace);
 
-        static string GetTemplateCode(INamedTypeSymbol self, ITypeSymbol tid, AttributeData attribute)
+        static string GetTemplateCode(INamedTypeSymbol self, ITypeSymbol tid, AttributeData attribute, string StructIdNamespace)
         {
             if (self.DeclaringSyntaxReferences[0].GetSyntax() is not TypeDeclarationSyntax declaration)
                 return "";
@@ -50,18 +51,48 @@ public class TemplatedGenerator : IIncrementalGenerator
                 root = root.ReplaceNode(update, updated);
             }
 
-            return root.SyntaxTree.GetRoot().ToFullString().Trim();
+            // replace usings/namespace from StructId > StructIdNamespace
+            var usings = root.DescendantNodes().OfType<UsingDirectiveSyntax>().ToList();
+            var ns = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            var nsname = ns?.Name.ToString();
+
+            if (nsname == "StructId")
+                root = root.ReplaceNode(ns!, ns!.WithName(ParseName(StructIdNamespace)));
+            else if (nsname != StructIdNamespace)
+                usings.Add(UsingDirective(ParseName(StructIdNamespace)));
+
+            // deduplicate usings just in case
+            var unique = new HashSet<string>();
+            root = root.ReplaceNodes(usings, (old, _) =>
+            {
+                // replace 'StructId' > StructIdNamespace
+                if (old.Name?.ToString() == "StructId")
+                {
+                    unique.Add(StructIdNamespace);
+                    return old.WithName(ParseName(StructIdNamespace));
+                }
+
+                if (unique.Add(old.Name?.ToString() ?? ""))
+                    return old;
+
+                return null!;
+            });
+
+            var code = root.SyntaxTree.GetRoot().NormalizeWhitespace().ToFullString().Trim();
+
+            return code;
         }
     }
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var targetNamespace = context.AnalyzerConfigOptionsProvider
+        var structIdNamespace = context.AnalyzerConfigOptionsProvider
             .Select((x, _) => x.GlobalOptions.TryGetValue("build_property.StructIdNamespace", out var ns) ? ns : "StructId");
 
         var known = context.CompilationProvider
-            .Combine(targetNamespace)
+            .Combine(structIdNamespace)
             .Select((x, _) => new KnownTypes(
+                x.Right,
                 // get string known type
                 x.Left.GetTypeByMetadataName("System.String")!,
                 x.Left.GetTypeByMetadataName($"{x.Right}.IStructId`1"),
@@ -91,14 +122,14 @@ public class TemplatedGenerator : IIncrementalGenerator
                 var (structId, known) = x;
                 var attribute = structId.GetAttributes().FirstOrDefault(a => a.AttributeClass != null && a.AttributeClass.Is(known.TStructIdT));
                 if (attribute != null)
-                    return new Template(structId, attribute.AttributeClass!.TypeArguments[0], attribute, true);
+                    return new Template(structId, attribute.AttributeClass!.TypeArguments[0], attribute, known.StructIdNamespace, true);
 
                 // If we don't have the generic attribute, infer the idType from the required 
                 // primary constructor Value parameter type
                 var idType = structId.GetMembers().OfType<IPropertySymbol>().First(p => p.Name == "Value").Type;
                 attribute = structId.GetAttributes().First(a => a.AttributeClass != null && a.AttributeClass.Is(known.TStructId));
 
-                return new Template(structId, idType, attribute, false);
+                return new Template(structId, idType, attribute, known.StructIdNamespace, false);
             })
             .Collect();
 
