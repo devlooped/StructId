@@ -23,6 +23,7 @@ public static partial class TestExtensions
         test.FixedState.Sources.Add(("IStructIdT.cs", ThisAssembly.Resources.StructId.IStructIdT.Text));
         test.FixedState.Sources.Add(("INewable.cs", ThisAssembly.Resources.StructId.INewable.Text));
         test.FixedState.Sources.Add(("INewableT.cs", ThisAssembly.Resources.StructId.INewableT.Text));
+        test.FixedState.Sources.Add(("TStructIdAttribute.cs", ThisAssembly.Resources.StructId.TStructIdAttribute.Text));
 
         // Fixes error CS0518: Predefined type 'System.Runtime.CompilerServices.IsExternalInit' is not defined or imported
         test.FixedState.Sources.Add(
@@ -50,6 +51,7 @@ public static partial class TestExtensions
         test.TestState.Sources.Add(("IStructIdT.cs", ThisAssembly.Resources.StructId.IStructIdT.Text));
         test.TestState.Sources.Add(("INewable.cs", ThisAssembly.Resources.StructId.INewable.Text));
         test.TestState.Sources.Add(("INewableT.cs", ThisAssembly.Resources.StructId.INewableT.Text));
+        test.TestState.Sources.Add(("TStructIdAttribute.cs", ThisAssembly.Resources.StructId.TStructIdAttribute.Text));
 
         // Fixes error CS0518: Predefined type 'System.Runtime.CompilerServices.IsExternalInit' is not defined or imported
         test.TestState.Sources.Add(

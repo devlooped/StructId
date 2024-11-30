@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 
 namespace StructId.Functional;
 
-public readonly partial record struct ProductId : IStructId<Guid>;
+public readonly partial record struct ProductId(Guid Value) : IStructId<Guid>;
 public readonly partial record struct UserId : IStructId<long>;
 public readonly partial record struct WalletId : IStructId;
 
@@ -113,6 +113,13 @@ public class FunctionalTests(ITestOutputHelper output)
 
         var product2 = connection.QueryFirst<Product>("SELECT * FROM Products WHERE Id = @Id", new { Id = productId });
         Assert.Equal(product, product2);
+    }
+
+    [Fact]
+    public void CustomTemplate()
+    {
+        var id = ProductId.New();
+        Assert.IsAssignableFrom<IId>(id);
     }
 
     public class Context : DbContext
