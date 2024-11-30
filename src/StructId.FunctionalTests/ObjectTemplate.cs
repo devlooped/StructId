@@ -1,4 +1,5 @@
 ﻿using StructId;
+using StructId.Functional;
 
 [TStructId]
 file partial record struct ObjectTemplate(object Value)
