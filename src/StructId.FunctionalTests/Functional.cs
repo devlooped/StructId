@@ -1,14 +1,18 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace StructId.Functional;
 
+// Showcases providing your own ctor
 public readonly partial record struct ProductId(Guid Value) : IStructId<Guid>;
+
 public readonly partial record struct UserId : IStructId<long>;
+// Showcases string-based id
 public readonly partial record struct WalletId : IStructId;
 
 public record Product(ProductId Id, string Name);
@@ -120,6 +124,19 @@ public class FunctionalTests(ITestOutputHelper output)
     {
         var id = ProductId.New();
         Assert.IsAssignableFrom<IId>(id);
+    }
+
+    [Fact]
+    public void SpanFormattableIdsImplementISpanFormattable()
+    {
+        Assert.IsAssignableFrom<ISpanFormattable>(ProductId.New());
+        Assert.IsAssignableFrom<ISpanFormattable>(UserId.New(123));
+    }
+
+    [Fact]
+    public void StringIdDoesNotImplementISpanFormattable()
+    {
+        Assert.IsNotAssignableFrom<ISpanFormattable>(WalletId.New("foo"));
     }
 
     public class Context : DbContext

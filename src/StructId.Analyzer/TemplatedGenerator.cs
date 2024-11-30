@@ -13,7 +13,7 @@ namespace StructId;
 [Generator(LanguageNames.CSharp)]
 public class TemplatedGenerator : IIncrementalGenerator
 {
-    record KnownTypes(string StructIdNamespace, INamedTypeSymbol String, INamedTypeSymbol? IStructId, INamedTypeSymbol? TStructId, INamedTypeSymbol? TStructIdT);
+    record KnownTypes(string StructIdNamespace, INamedTypeSymbol String, INamedTypeSymbol? IStructId, INamedTypeSymbol? IStructIdT, INamedTypeSymbol? TStructId, INamedTypeSymbol? TStructIdT);
     record IdTemplate(INamedTypeSymbol StructId, Template Template);
     record Template(INamedTypeSymbol TSelf, ITypeSymbol TId, AttributeData Attribute, string StructIdNamespace, bool IsGenericTId)
     {
@@ -59,7 +59,7 @@ public class TemplatedGenerator : IIncrementalGenerator
             if (nsname == "StructId")
                 root = root.ReplaceNode(ns!, ns!.WithName(ParseName(StructIdNamespace)));
             else if (nsname != StructIdNamespace)
-                usings.Add(UsingDirective(ParseName(StructIdNamespace)));
+                usings.Add(UsingDirective(ParseName(StructIdNamespace)).NormalizeWhitespace());
 
             // deduplicate usings just in case
             var unique = new HashSet<string>();
@@ -78,9 +78,31 @@ public class TemplatedGenerator : IIncrementalGenerator
                 return null!;
             });
 
-            var code = root.SyntaxTree.GetRoot().NormalizeWhitespace().ToFullString().Trim();
+            // rewrite Value references to explicit casts just in case the 
+            // target type is implemented explicitly.
+            root = new ValueRewriter(tid).Visit(root);
+
+            var code = root.SyntaxTree.GetRoot().ToFullString().Trim();
 
             return code;
+        }
+    }
+
+    // create a syntax rewriter that replaces references to the Value property with an explicit 
+    // cast of that property to a given INamedTypeSymbol
+    class ValueRewriter(ITypeSymbol idType) : CSharpSyntaxRewriter
+    {
+        public override SyntaxNode? VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+        {
+            // Cover both the this.Value scenario
+            if (node.Name.Identifier.Text == "Value")
+                return ParenthesizedExpression(CastExpression(ParseTypeName(idType.ToFullName()), node));
+
+            // As well as the Value.[Member] scenario
+            if (node.Expression is IdentifierNameSyntax name && name.Identifier.Text == "Value")
+                return node.WithExpression(ParenthesizedExpression(CastExpression(ParseTypeName(idType.ToFullName()), name)));
+
+            return base.VisitMemberAccessExpression(node);
         }
     }
 
@@ -95,6 +117,7 @@ public class TemplatedGenerator : IIncrementalGenerator
                 x.Right,
                 // get string known type
                 x.Left.GetTypeByMetadataName("System.String")!,
+                x.Left.GetTypeByMetadataName($"{x.Right}.IStructId"),
                 x.Left.GetTypeByMetadataName($"{x.Right}.IStructId`1"),
                 x.Left.GetTypeByMetadataName($"{x.Right}.TStructIdAttribute"),
                 x.Left.GetTypeByMetadataName($"{x.Right}.TStructIdAttribute`1")));
@@ -135,23 +158,23 @@ public class TemplatedGenerator : IIncrementalGenerator
 
         var ids = context.CompilationProvider
             .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
+            .Where(x => x.IsRecord && x.IsValueType && x.IsPartial())
             .Combine(known)
-            .Where(x => x.Right.IStructId != null && x.Left.Is(x.Right.IStructId) && x.Left.IsPartial())
+            .Where(x => x.Left.Is(x.Right.IStructId) || x.Left.Is(x.Right.IStructIdT))
             .Combine(templates)
             .Where(x =>
             {
                 var ((id, known), templates) = x;
-                var structId = id.AllInterfaces.FirstOrDefault(i => i.Is(known.IStructId));
+                var structId = id.AllInterfaces.FirstOrDefault(i => i.Is(known.IStructId) || i.Is(known.IStructIdT));
                 return structId != null;
             })
             .SelectMany((x, _) =>
             {
                 var ((id, known), templates) = x;
                 // Locate the IStructId<TId> interface implemented by the id
-                var structId = id.AllInterfaces.First(i => i.Is(known.IStructId));
-                var tid = structId.TypeArguments[0];
-                // If the current struct id (which will be a generic) implements or inherits from 
-                // the template base type and/or its interfaces
+                var structId = id.AllInterfaces.First(i => i.Is(known.IStructId) || i.Is(known.IStructIdT));
+                var tid = structId.IsGenericType ? structId.TypeArguments[0] : known.String;
+                // If the TId/Value implements or inherits from the template base type and/or its interfaces
                 return templates
                     // check struct id's value type against the template's TId for compatibility
                     .Where(template =>

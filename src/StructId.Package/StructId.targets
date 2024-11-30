@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <StructId Include="$(MSBuildThisFileDirectory)*.cs" Link="StructId\$(StructIdPathHash)%(Filename)%(Extension)" />
+    <StructId Include="$(MSBuildThisFileDirectory)Templates\*.cs" Link="StructId\$(StructIdPathHash)Templates\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Target Name="CollectStructIds">
@@ -18,16 +19,19 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="CopyStructIdAsIs" Condition="$(StructIdNamespace) == 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="%(StructId.TargetPath)">
-    <Copy SourceFiles="@(StructId)"
-          DestinationFiles="@(StructId -> '%(TargetPath)')"
-          SkipUnchangedFiles="true" />
+  <Target Name="IncludeStructIdAsIs" Condition="$(StructIdNamespace) == 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="%(StructId.TargetPath)">
+    <!-- No copying needed in this case, we'll just include the original files. -->
+    <ItemGroup>
+      <StructId>
+        <TargetPath>%(FullPath)</TargetPath>
+      </StructId>
+    </ItemGroup>
   </Target>
 
   <Target Name="AddStructIdContent" Condition="$(StructIdNamespace) != 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="|%(StructId.Identity)|">
     <PropertyGroup>
       <StructIdContent>$([System.IO.File]::ReadAllText(%(StructId.FullPath)))</StructIdContent>
-      <StructIdContent>$(StructIdContent.Replace('namespace StructId', 'namespace $(StructIdNamespace)'))</StructIdContent>
+      <StructIdContent>$(StructIdContent.Replace('using StructId', 'using $(StructIdNamespace)').Replace('namespace StructId', 'namespace $(StructIdNamespace)'))</StructIdContent>
     </PropertyGroup>
     <ItemGroup>
       <StructId>
@@ -37,10 +41,10 @@
   </Target>
 
   <Target Name="CopyStructIdNamespaced" Condition="$(StructIdNamespace) != 'StructId'" DependsOnTargets="AddStructIdContent" Inputs="@(StructId)" Outputs="%(StructId.TargetPath)">
-    <WriteRaw Content="%(StructId.Content)" TargetPath="%(StructId.TargetPath)" />
+    <WriteRaw Content="%(StructId.Content)" SourcePath="%(StructId.FullPath)" TargetPath="%(StructId.TargetPath)" />
   </Target>
 
-  <Target Name="AddStructId" DependsOnTargets="CopyStructIdAsIs;CopyStructIdNamespaced" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+  <Target Name="AddStructId" DependsOnTargets="IncludeStructIdAsIs;CopyStructIdNamespaced" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
     <ItemGroup>
       <Compile Include="%(StructId.TargetPath)" />
     </ItemGroup>
@@ -49,6 +53,7 @@
   <UsingTask TaskName="WriteRaw" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <Content ParameterType="System.String" Required="true" />
+      <SourcePath ParameterType="System.String" Required="true" />
       <TargetPath ParameterType="System.String" Required="true" />
     </ParameterGroup>
     <Task>
@@ -60,6 +65,7 @@
         <![CDATA[
         Directory.CreateDirectory(Path.GetDirectoryName(TargetPath));
         File.WriteAllText(TargetPath, Content, Encoding.UTF8);
+        File.SetLastWriteTimeUtc(TargetPath, File.GetLastWriteTimeUtc(SourcePath));
         ]]>
       </Code>
     </Task>

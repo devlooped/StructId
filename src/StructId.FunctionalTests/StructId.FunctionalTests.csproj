@@ -31,7 +31,9 @@
     <Using Include="Xunit" />
     <Using Include="Xunit.Abstractions" />
 
+    <!-- These would be added from the package-relative paths by the StructId.targets -->
     <StructId Include="..\StructId\*.cs" Link="StructId\%(Filename)%(Extension)" />
+    <StructId Include="..\StructId\Templates\*.cs" Link="StructId\Templates\%(Filename)%(Extension)" />
 
     <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll" Condition="Exists('$(PkgScriban)/lib/netstandard2.0/Scriban.dll')" />
   </ItemGroup>
