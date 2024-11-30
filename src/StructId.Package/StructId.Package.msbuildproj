@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\StructId\*.cs" Visible="false" />
+    <None Include="..\StructId\Templates\*.cs" PackFolder="$(PackFolder)\Templates" Visible="false" />
     <None Update="@(None)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
