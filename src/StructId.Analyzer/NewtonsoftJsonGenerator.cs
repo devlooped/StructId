@@ -18,8 +18,7 @@ public class NewtonsoftJsonGenerator() : BaseGenerator(
         context.RegisterSourceOutput(
             context.CompilationProvider
             .Select((x, _) => x.GetTypeByMetadataName("Newtonsoft.Json.JsonConverter`1"))
-            .Combine(context.AnalyzerConfigOptionsProvider
-            .Select((x, _) => x.GlobalOptions.TryGetValue("build_property.StructIdNamespace", out var ns) ? ns : "StructId")),
+            .Combine(context.AnalyzerConfigOptionsProvider.GetStructIdNamespace()),
             (context, source) =>
             {
                 if (source.Left == null)

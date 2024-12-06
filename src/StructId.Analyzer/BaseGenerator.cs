@@ -26,8 +26,7 @@ public abstract class BaseGenerator(string referenceType, string stringTemplate,
 
     public virtual void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var targetNamespace = context.AnalyzerConfigOptionsProvider
-            .Select((x, _) => x.GlobalOptions.TryGetValue("build_property.StructIdNamespace", out var ns) ? ns : "StructId");
+        var targetNamespace = context.AnalyzerConfigOptionsProvider.GetStructIdNamespace();
 
         // Locate the required types
         var types = context.CompilationProvider
