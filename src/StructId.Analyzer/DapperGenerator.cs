@@ -23,7 +23,7 @@ public class DapperGenerator() : BaseGenerator(
             _ => false
         });
 
-        context.RegisterSourceOutput(source.Collect(), GenerateHandlers);
+        context.RegisterSourceOutput(supported.Collect(), GenerateHandlers);
 
         // Turn off codegen in the base template.
         return source.Where(x => false);
@@ -41,6 +41,9 @@ public class DapperGenerator() : BaseGenerator(
         var output = template.Render(model, member => member.Name);
         context.AddSource($"DapperExtensions.cs", output);
     }
+
+    public static string Render(string @namespace, string tself, string tid)
+        => template.Render(new SelectorModel(@namespace, [new StructIdModel(tself, tid)]), member => member.Name);
 
     record StructIdModel(string TSelf, string TId);
 
