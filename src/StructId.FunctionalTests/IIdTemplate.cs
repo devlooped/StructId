@@ -7,7 +7,7 @@ using StructId;
 using StructId.Functional;
 
 [TStructId]
-file partial record struct IIdTemplate(Guid Value) : IId
+file partial record struct TSelf(Guid Value) : IId
 {
     public Guid Id => Value;
 }

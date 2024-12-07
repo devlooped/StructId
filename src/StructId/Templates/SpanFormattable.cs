@@ -5,11 +5,13 @@ using System;
 using StructId;
 
 [TStructId]
-file partial record struct SpanFormattable(ISpanFormattable Value) : ISpanFormattable
+file partial record struct TSelf(ISpanFormattable Value) : ISpanFormattable
 {
+    /// <inheritdoc/>
     public readonly string ToString(string? format, IFormatProvider? formatProvider)
-        => Value.ToString(format, formatProvider);
+        => ((ISpanFormattable)Value).ToString(format, formatProvider);
 
+    /// <inheritdoc/>
     public readonly bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
-        => this.Value.TryFormat(destination, out charsWritten, format, provider);
+        => ((ISpanFormattable)Value).TryFormat(destination, out charsWritten, format, provider);
 }
