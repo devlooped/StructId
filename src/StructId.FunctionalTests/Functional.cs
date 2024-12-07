@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -138,6 +139,26 @@ public class FunctionalTests(ITestOutputHelper output)
     public void StringIdDoesNotImplementISpanFormattable()
     {
         Assert.IsNotAssignableFrom<ISpanFormattable>(WalletId.New("foo"));
+    }
+
+    [Fact]
+    public void GuidImplementUtf8SpanFormattable()
+    {
+        var id = ProductId.New();
+
+        Assert.IsAssignableFrom<IUtf8SpanFormattable>(id);
+
+        Span<byte> utf8Destination = new byte[36]; // Typical GUID length in string form
+
+        if (id.TryFormat(utf8Destination, out int bytesWritten, default, null))
+        {
+            var guid = new Guid(Encoding.UTF8.GetString(utf8Destination.Slice(0, bytesWritten)));
+            Assert.Equal(id.Value, guid);
+        }
+        else
+        {
+            Assert.Fail("TryFormat failed");
+        }
     }
 
     public class Context : DbContext
