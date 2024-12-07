@@ -138,7 +138,14 @@ public static class AnalysisExtensions
         return typeName;
     }
 
-    public static string ToFileName(this ITypeSymbol type) => type.ToDisplayString(FullNameNullable).Replace('+', '.');
+    public static string ToFileName(this ITypeSymbol type)
+    {
+        if (type.ContainingNamespace == null || type.ContainingNamespace.IsGlobalNamespace)
+            return type.Name;
+
+        var name = type.MetadataName.Replace('+', '.');
+        return $"{type.ContainingNamespace.ToFullName()}.{name}";
+    }
 
     public static bool IsStructId(this ITypeSymbol type) => type.AllInterfaces.Any(x => x.Name == "IStructId");
 

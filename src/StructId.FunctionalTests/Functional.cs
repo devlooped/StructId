@@ -32,6 +32,11 @@ public class FunctionalTests(ITestOutputHelper output)
 
         Assert.Equal(id1, id2);
         Assert.True(id1 == id2);
+
+        var user1 = new UserId(1);
+        var user2 = new UserId(2);
+
+        Assert.True(user1 < user2);
     }
 
     [Fact]
