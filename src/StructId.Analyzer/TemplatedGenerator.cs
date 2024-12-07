@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,10 +40,6 @@ public partial class TemplatedGenerator : IIncrementalGenerator
         /// StructId.TStructIdAttribute
         /// </summary>
         public INamedTypeSymbol? TStructId { get; } = Compilation.GetTypeByMetadataName($"{StructIdNamespace}.TStructIdAttribute");
-        /// <summary>
-        /// StructId.TStructIdAttribute{T}
-        /// </summary>
-        public INamedTypeSymbol? TStructIdT { get; } = Compilation.GetTypeByMetadataName($"{StructIdNamespace}.TStructIdAttribute`1");
     }
 
     /// <summary>
@@ -173,21 +168,16 @@ public partial class TemplatedGenerator : IIncrementalGenerator
                 declaration.ParameterList?.Parameters.Count == 1 &&
                 declaration.ParameterList.Parameters[0].Identifier.Text == "Value" &&
                 // And we can locate the TStructIdAttribute type that should be applied to it.
-                x.Right.TStructId != null && x.Right.TStructIdT != null &&
+                x.Right.TStructId != null &&
                 x.Left.GetAttributes().Any(a => a.AttributeClass != null &&
                     // The attribute should either be the generic or regular TStructIdAttribute
-                    (a.AttributeClass.Is(x.Right.TStructId) || a.AttributeClass.Is(x.Right.TStructIdT))))
+                    (a.AttributeClass.Is(x.Right.TStructId))))
             .Select((x, cancellation) =>
             {
                 var (structId, known) = x;
-                var attribute = structId.GetAttributes().FirstOrDefault(a => a.AttributeClass != null && a.AttributeClass.Is(known.TStructIdT));
-                if (attribute != null && attribute.AttributeClass!.TypeArguments[0] is INamedTypeSymbol attrType)
-                    return new Template(structId, attrType, attribute, known);
-
-                // If we don't have the generic attribute, infer the idType from the required 
-                // primary constructor Value parameter type
+                // We infer the idType from the required primary constructor Value parameter type
                 var idType = (INamedTypeSymbol)structId.GetMembers().OfType<IPropertySymbol>().First(p => p.Name == "Value").Type;
-                attribute = structId.GetAttributes().First(a => a.AttributeClass != null && a.AttributeClass.Is(known.TStructId));
+                var attribute = structId.GetAttributes().First(a => a.AttributeClass != null && a.AttributeClass.Is(known.TStructId));
 
                 // The id type isn't declared in the same file, so we don't do anything fancy with it.
                 if (idType.DeclaringSyntaxReferences.Length == 0)
