@@ -187,7 +187,7 @@ public partial class TemplatedGenerator : IIncrementalGenerator
                 var type = idType.DeclaringSyntaxReferences[0].GetSyntax(cancellation) as TypeDeclarationSyntax;
                 var iface = type?.BaseList?.Types.FirstOrDefault()?.Type;
                 if (type == null || iface == null)
-                    return new Template(structId, idType, attribute, known);
+                    return new Template(structId, idType, attribute, known) { OriginalTId = idType };
 
                 if (x.Right.Compilation.GetSemanticModel(type.SyntaxTree).GetSymbolInfo(iface).Symbol is not INamedTypeSymbol ifaceType)
                     return new Template(structId, idType, attribute, known);
