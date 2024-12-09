@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using static StructId.Diagnostics;
 
 namespace StructId;
 
@@ -14,7 +15,8 @@ namespace StructId;
 [ExportCodeFixProvider(LanguageNames.CSharp)]
 public class RenameCtorCodeFix : CodeFixProvider
 {
-    public override ImmutableArray<string> FixableDiagnosticIds { get; } = ImmutableArray.Create(Diagnostics.MustHaveValueConstructor.Id);
+    public override ImmutableArray<string> FixableDiagnosticIds { get; } = ImmutableArray.Create(
+        MustHaveValueConstructor.Id, TemplateConstructorValueConstructor.Id);
 
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
@@ -35,7 +37,7 @@ public class RenameCtorCodeFix : CodeFixProvider
 
     public class RenameAction(Document document, SyntaxNode root, ParameterSyntax parameter) : CodeAction
     {
-        public override string Title => "Rename to 'Value' as required for struct ids";
+        public override string Title => "Rename to 'Value'";
         public override string EquivalenceKey => Title;
 
         protected override Task<Document> GetChangedDocumentAsync(CancellationToken cancellationToken)

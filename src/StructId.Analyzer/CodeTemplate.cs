@@ -17,12 +17,16 @@ public static class CodeTemplate
         return tree.GetRoot();
     }
 
-    public static string Apply(string template, string structIdType, string valueType)
+    public static string Apply(string template, string structIdType, string valueType, bool normalizeWhitespace = false)
     {
         var targetNamespace = structIdType.Contains('.') ? structIdType.Substring(0, structIdType.LastIndexOf('.')) : null;
         structIdType = structIdType.Contains('.') ? structIdType.Substring(structIdType.LastIndexOf('.') + 1) : structIdType;
 
-        return ApplyImpl(Parse(template), structIdType, valueType, targetNamespace).ToFullString();
+        var applied = ApplyImpl(Parse(template), structIdType, valueType, targetNamespace);
+
+        return normalizeWhitespace ?
+            applied.NormalizeWhitespace().ToFullString() :
+            applied.ToFullString();
     }
 
     public static SyntaxNode Apply(this SyntaxNode node, INamedTypeSymbol structId)
@@ -99,11 +103,13 @@ public static class CodeTemplate
                 !node.AttributeLists.Any(list => list.Attributes.Any(a => a.IsStructIdTemplate())))
                 return null;
 
-            // If the record has the [TStructId] attribute, remove parameter list
+            // If the record has the [TStructId] attribute, remove primary ctor
             if (node.AttributeLists.Any(list => list.Attributes.Any(a => a.IsStructIdTemplate())) &&
                 node.ParameterList is { } parameters)
             {
                 // Check if the open paren trivia contains the text '🙏' and remove it
+                // This is used to signal that the primary ctor should not be removed. 
+                // This is the case with the ctor templates.
                 if (parameters.OpenParenToken.GetAllTrivia().Any(x => x.ToString().Contains("🙏")))
                     node = node.WithParameterList(parameters
                         .WithOpenParenToken(parameters.OpenParenToken.WithoutTrivia()));
@@ -131,6 +137,15 @@ public static class CodeTemplate
                 return null;
 
             return base.VisitStructDeclaration(node);
+        }
+
+        public override SyntaxNode? VisitClassDeclaration(ClassDeclarationSyntax node)
+        {
+            // remove file-local classes (they can't be annotated with [TStructId])
+            if (node.Modifiers.Any(x => x.IsKind(SyntaxKind.FileKeyword)))
+                return null;
+
+            return base.VisitClassDeclaration(node);
         }
 
         public override SyntaxNode? VisitAttributeList(AttributeListSyntax node)
