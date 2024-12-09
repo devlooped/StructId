@@ -20,13 +20,13 @@ Unlike other such libraries for .NET, StructId introduces several unique feature
 1. **Zero** configuration: additional features are automatically added as you reference 
    dependencies that require them. For example: if your project references EF Core, 
    Dapper, or Newtonsoft.Json, the corresponding serialization and deserialization 
-   code will be emitted without any additional configuration.
+   code will be emitted without any additional configuration for the generation itself.
 1. Leverages newest language and runtime features for cleaner and more efficient code, 
    such as:
-   1. IParsable<T> for parsing from strings.
+   1. `IParsable<T>`/`ISpanParsable<T>` for parsing from strings.
    1. Static interface members, for consistent `TSelf.New(TId value)` factory 
       method and proper type constraint (via a provided `INewable<TSelf, TId>` interface).
-
+   1. File-scoped C# templates for unparalelled authoring and extensibility experience.
 
 ## Usage
 
@@ -38,8 +38,8 @@ After installing the [StructId package](https://nuget.org/packages/StructId), th
 > since analyzers/generators will [automatically propagate to referencing projects]((https://github.com/dotnet/sdk/issues/1212)).
 
 The package is a [development dependency](https://github.com/NuGet/Home/wiki/DevelopmentDependency-support-for-PackageReference), 
-meaning it will not contribute to any run-time dependencies of your project (or package if 
-you publish one).
+meaning it will not add any run-time dependencies to your project (or package if you 
+publish one that uses struct ids).
 
 The default target namespace for the included types will match the `RootNamespace` of the 
 project, but can be customized by setting the `StructIdNamespace` property.
@@ -68,7 +68,7 @@ public readonly partial record struct ProductId(int Value) : IStructId<int>;
 It must contain a single parameter named `Value` (and codefixes will offer to rename or 
 remove it if you don't need it anymore).
 
-### EF Core
+## EF Core
 
 If you are using EF Core, the package will automatically generate the necessary value converters, 
 as well as an `UseStructId` extension method for `DbContextOptionsBuilder` to set them up:
@@ -102,6 +102,89 @@ connection.Open();
 ```
 
 The supported types are `Guid`, `int`, `long` and `string` for now.
+
+## Customization via Templates
+
+Virtually all the built-in interfaces and implementations are generated using the same compiled 
+templates mechanism available to you. Templates are regular C# files in your project with a 
+few constraints. Here's an example from the built-in ones:
+
+```csharp
+using System;
+using StructId;
+
+[TStructId]
+file partial record struct TSelf(IUtf8SpanFormattable Value) : IUtf8SpanFormattable
+{
+    /// <inheritdoc/>
+    public bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format, IFormatProvider? provider) 
+        => ((IUtf8SpanFormattable)Value).TryFormat(utf8Destination, out bytesWritten, format, provider);
+}
+```
+
+This type is considered a template because it's marked with the `[TStructId]` attribute. 
+This introduces some restrictions that are enfored by an analyzer:
+1. The type must be a `partial record struct` since it will complement a partial declaration 
+   of that type by the user (i.e. `partial record struct PersonId : IStructId<Guid>;`)
+1. The type must be [file-scoped](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/file), 
+   which automatically prevents polluting your assembly with types that aren't intended for 
+   direct consumption outside the template file itself.
+1. The template can optionally declare the type of ID value it supports by introducing the 
+   primary constructor with a single parameter named `Value` of that type.
+1. The record itself must be named `TSelf`.
+
+The template itself can introduce arbitrary code that will be emitted for each matching 
+struct id (i.e. all struct ids whose value type implements `IUtf8SpanFormattable` in this case). 
+In this example, the template simply offers a pass-through implementation of the `IUtf8SpanFormattable` 
+value.
+
+As another example, imagine you have some standardized way of treating IDs in your application, 
+by providing an interface for them, which applies to all `Guid`-based IDs:
+
+```csharp
+public interface IId
+{
+    public Guid Id { get; }
+}
+```
+
+You can now create a template that will automatically provide this interface for all struct 
+ids that use `Guid` as their value type as follows:
+
+```csharp
+[TStructId]
+file partial record struct TSelf(Guid Value) : IId
+{
+    public Guid Id => Value;
+}
+```
+
+This template is a proper C# compilation unit, so you can use any C# feature that 
+your project supports, since its output will also be emitted via a source generator 
+in the same project for matching struct ids.
+
+In the case of a struct id defined as follows:
+
+```csharp
+public partial record struct PersonId : IStructId<Guid>;
+```
+
+The template will be applied automatically and result in a partial declaration 
+like:
+
+```csharp
+partial record struct PersonId : IId
+{
+    public Guid Id => Value;
+}
+```
+
+Things to note at template expansion time:
+1. The `[TStructId]` attribute is removed from the generated type automatically.
+1. The `TSelf` type is replaced with the actual name of the struct id.
+1. The primary constructor on the template is removed since it is already provided 
+   by anoother generator.
+
 
 <!-- #content -->
 <!-- #ci -->
