@@ -4,7 +4,8 @@
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StructId;
 
-readonly partial record struct TSelf : INewable<TSelf, TId>
+[TStructId]
+file partial record struct TSelf(TId Value) : INewable<TSelf, TId>
 {
     /// <summary>
     /// Provides value conversion for Entity Framework Core
@@ -17,3 +18,10 @@ readonly partial record struct TSelf : INewable<TSelf, TId>
             : base(id => id.Value, value => TSelf.New(value), mappingHints) { }
     }
 }
+
+file partial record struct TSelf
+{
+    public static TSelf New(TId value) => throw new System.NotImplementedException();
+}
+
+file partial record struct TId;

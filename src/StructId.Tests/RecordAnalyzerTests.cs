@@ -20,7 +20,7 @@ public class RecordAnalyzerTests
             """
             public readonly record struct UserId(int Value);
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
     }
@@ -35,7 +35,7 @@ public class RecordAnalyzerTests
             """
             public record struct UserId(int Value);
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
     }
@@ -52,7 +52,7 @@ public class RecordAnalyzerTests
 
             public readonly record struct UserId : {|#0:IStructId|};
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId"));
         test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(0));
@@ -72,7 +72,7 @@ public class RecordAnalyzerTests
 
             public readonly record struct UserId : {|#0:IStructId<int>|};
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId"));
         test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(0));
@@ -92,7 +92,7 @@ public class RecordAnalyzerTests
 
             public partial record struct UserId : {|#0:IStructId<int>|};
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         var expected = Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId");
 
@@ -114,7 +114,7 @@ public class RecordAnalyzerTests
 
             public partial record struct UserId : {|#0:IStructId|};
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         var expected = Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId");
 
@@ -137,7 +137,7 @@ public class RecordAnalyzerTests
 
             public record struct UserId : {|#0:IStructId<int>|};
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId"));
         test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(0));
@@ -157,7 +157,7 @@ public class RecordAnalyzerTests
 
             public struct UserId : {|#0:IStructId<int>|};
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId"));
         test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(0));
@@ -177,7 +177,7 @@ public class RecordAnalyzerTests
 
             public class UserId : {|#0:IStructId<int>|};
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.MustBeRecordStruct).WithLocation(0).WithArguments("UserId"));
         test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(0));
@@ -197,7 +197,7 @@ public class RecordAnalyzerTests
             
             public readonly partial record struct UserId(int {|#0:value|}) : IStructId<int>; 
             """,
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.MustHaveValueConstructor).WithLocation(0).WithArguments("UserId"));
         test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(3, 59));

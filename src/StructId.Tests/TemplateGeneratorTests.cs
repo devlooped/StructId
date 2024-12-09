@@ -54,7 +54,7 @@ public class TemplateGeneratorTests
                     """
                 },
             },
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
 
@@ -120,7 +120,7 @@ public class TemplateGeneratorTests
                     """
                 },
             },
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
 

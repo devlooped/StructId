@@ -30,7 +30,7 @@ public class RecordCtorCodeFixTests
             
             public readonly partial record struct UserId(int Value) : IStructId<int>;
             """,
-        }.WithCodeFixStructId();
+        }.WithCodeFixDefaults();
 
         test.ExpectedDiagnostics.Add(new DiagnosticResult(Diagnostics.MustHaveValueConstructor).WithLocation(0).WithArguments("UserId"));
         test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(1));
@@ -59,7 +59,7 @@ public class RecordCtorCodeFixTests
             
             public readonly partial record struct UserId: {|#0:IStructId<int>|};
             """,
-        }.WithCodeFixStructId();
+        }.WithCodeFixDefaults();
 
         test.ExpectedDiagnostics.Add(new DiagnosticResult(Diagnostics.MustHaveValueConstructor).WithLocation(0).WithArguments("UserId"));
         test.ExpectedDiagnostics.Add(new DiagnosticResult("CS0535", DiagnosticSeverity.Error).WithLocation(1));

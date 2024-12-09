@@ -24,7 +24,7 @@ public class ConstructorGeneratorTests
                     """,
                 },
             },
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
     }
@@ -48,7 +48,7 @@ public class ConstructorGeneratorTests
                     """,
                 },
             },
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
     }
@@ -71,7 +71,7 @@ public class ConstructorGeneratorTests
                     """,
                 },
             },
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
     }

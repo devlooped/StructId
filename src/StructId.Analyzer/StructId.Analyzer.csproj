@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <TemplateCode Include="..\StructId\ResourceTemplates\*.cs" Link="StructId\%(Filename)%(Extension)" />
+    <TemplateCode Include="..\StructId\Templates\*.cs" Link="StructId\%(Filename)%(Extension)" />
     <EmbeddedResource Include="*.sbn" Kind="Text" />
     <UpToDateCheck Include="@(TemplateCode);@(EmbeddedResource)" />
   </ItemGroup>

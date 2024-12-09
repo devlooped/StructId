@@ -20,6 +20,9 @@ public class DapperGenerator() : BaseGenerator(
             "System.Guid" => true,
             "System.Int32" => true,
             "System.Int64" => true,
+            "string" => true,
+            "int" => true,
+            "long" => true,
             _ => false
         });
 
