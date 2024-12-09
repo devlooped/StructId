@@ -2,8 +2,11 @@
 
 using StructId;
 
-readonly partial record struct TSelf : INewable<TSelf, TId>
+[TStructId]
+file partial record struct TSelf(TId Value) : INewable<TSelf, TId>
 {
     /// <inheritdoc/>
     public static TSelf New(TId value) => new(value);
 }
+
+file record struct TId;

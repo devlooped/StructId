@@ -21,7 +21,7 @@ public static class AnalysisExtensions
     public static SymbolDisplayFormat FullNameNullable { get; } = new(
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable);
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable | SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
     public static string ToFullName(this ISymbol symbol) => symbol.ToDisplayString(FullNameNullable);
 
@@ -148,6 +148,9 @@ public static class AnalysisExtensions
     }
 
     public static bool IsStructId(this ITypeSymbol type) => type.AllInterfaces.Any(x => x.Name == "IStructId");
+
+    public static bool IsStructIdTemplate(this AttributeSyntax attribute)
+        => attribute.Name.ToString() == "TStructId" || attribute.Name.ToString() == "TStructIdAttribute";
 
     public static bool IsPartial(this ITypeSymbol node) => node.DeclaringSyntaxReferences.Any(
         r => r.GetSyntax() is TypeDeclarationSyntax { Modifiers: { } modifiers } &&

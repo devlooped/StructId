@@ -1,22 +1,18 @@
-using System.Collections.Generic;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using Scriban;
 
 namespace StructId;
 
 [Generator(LanguageNames.CSharp)]
 public partial class TemplatedGenerator : IIncrementalGenerator
 {
-    static Regex TSelfExpr = new($@"\bTSelf\b", RegexOptions.Compiled | RegexOptions.Multiline);
-
-    static Regex TIdExpr = new($@"\bTId\b", RegexOptions.Compiled | RegexOptions.Multiline);
-
     /// <summary>
     /// Provides access to some common types and properties used in the compilation.
     /// </summary>
@@ -52,97 +48,64 @@ public partial class TemplatedGenerator : IIncrementalGenerator
 
     record Template(INamedTypeSymbol TSelf, INamedTypeSymbol TId, AttributeData Attribute, KnownTypes KnownTypes)
     {
-        string? code;
-
         public INamedTypeSymbol? OriginalTId { get; init; }
 
         // A custom TId is a file-local type declaration.
         public bool IsLocalTId => OriginalTId?.DeclaringSyntaxReferences
             .All(x => x.GetSyntax() is TypeDeclarationSyntax decl && decl.Modifiers.Any(m => m.IsKind(SyntaxKind.FileKeyword))) == true;
 
-        public string Text
+        public SyntaxNode Syntax { get; } = TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot();
+
+        public bool NoString { get; } = new NoStringWalker().Accept(
+            TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot());
+
+        /// <summary>
+        /// Checks the value type against the template's TId for compatibility
+        /// </summary>
+        public bool AppliesTo(INamedTypeSymbol valueType)
         {
-            get => code ??= GetTemplateCode(TSelf, TId, OriginalTId, Attribute, KnownTypes);
+            if (NoString && valueType.Equals(KnownTypes.String, SymbolEqualityComparer.Default))
+                return false;
+
+            if (valueType.Equals(TId, SymbolEqualityComparer.Default))
+                return true;
+
+            if (valueType.Is(TId))
+                return true;
+
+            // If the template had a generic attribute, we'd be looking at an intermediate 
+            // type (typically TValue or TId) being used to define multiple constraints on 
+            // the struct id's value type, such as implementing multiple interfaces. In 
+            // this case, the tid would never equal or inherit from the template's TId, 
+            // but we want instead to check for base type compatibility plus all interfaces.
+            return IsLocalTId &&
+                 // TId is a derived class of the template's TId base type (i.e. object or ValueType)
+                 valueType.Is(TId.BaseType) &&
+                 // All template provided TId interfaces must be implemented by the struct id's TId
+                 TId.AllInterfaces.All(iface =>
+                    valueType.AllInterfaces.Any(tface => tface.Is(iface)));
         }
 
-        static string GetTemplateCode(INamedTypeSymbol self, INamedTypeSymbol id,
-            INamedTypeSymbol? originalId, AttributeData attribute, KnownTypes known)
+        class NoStringWalker : CSharpSyntaxWalker
         {
-            if (self.DeclaringSyntaxReferences[0].GetSyntax() is not TypeDeclarationSyntax declaration)
-                return "";
+            bool nostring;
 
-            // Remove the TId/TValue if present in the same syntax tree.
-            var toremove = id.DeclaringSyntaxReferences.Select(x => x.GetSyntax()).ToList();
-            // The target id might not be the same as the original id (which can be a local TId)
-            if (originalId != null)
-                toremove.AddRange(originalId.DeclaringSyntaxReferences.Select(x => x.GetSyntax()));
-
-            // Also the [TStructId<T>] attribute applied to the template itself
-            if (attribute.ApplicationSyntaxReference?.GetSyntax().FirstAncestorOrSelf<AttributeListSyntax>() is { } attr)
-                toremove.Add(attr);
-            // And the primary constructor if present, since that's generated for the struct id already
-            if (declaration.ParameterList != null)
-                toremove.Add(declaration.ParameterList);
-
-            var root = declaration.SyntaxTree
-                .GetRoot()
-                .RemoveNodes(toremove, SyntaxRemoveOptions.KeepLeadingTrivia)!;
-
-            var update = root.DescendantNodes().OfType<TypeDeclarationSyntax>().First(x => x.Identifier.Text == self.Name);
-
-            // Remove file-scoped modifier if present
-            if (update.Modifiers.FirstOrDefault(x => x.IsKind(SyntaxKind.FileKeyword)) is { } file)
+            public bool Accept(SyntaxNode node)
             {
-                var updated = update.WithModifiers(update.Modifiers.Remove(file));
-                // Preserve trivia, i.e. newline from original file modifier
-                if (updated.Modifiers.Count > 0)
-                    updated = updated.ReplaceToken(updated.Modifiers[0], updated.Modifiers[0].WithLeadingTrivia(file.LeadingTrivia));
-
-                root = root.ReplaceNode(update, updated);
+                Visit(node);
+                return nostring;
             }
 
-            // replace usings/namespace from StructId > StructIdNamespace
-            var usings = root.DescendantNodes().OfType<UsingDirectiveSyntax>().ToList();
-            var ns = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            var nsname = ns?.Name.ToString();
-
-            if (nsname == "StructId")
-                root = root.ReplaceNode(ns!, ns!.WithName(ParseName(known.StructIdNamespace)));
-            else if (nsname != known.StructIdNamespace)
-                usings.Add(UsingDirective(ParseName(known.StructIdNamespace)).NormalizeWhitespace());
-
-            // deduplicate usings just in case
-            var unique = new HashSet<string>();
-            root = root.ReplaceNodes(usings, (old, _) =>
+            // visit primary constructor and check if there's a trivia with "/*!string*/"
+            public override void VisitRecordDeclaration(RecordDeclarationSyntax node)
             {
-                // replace 'StructId' > StructIdNamespace
-                if (old.Name?.ToString() == "StructId")
+                if (node.AttributeLists.Any(list => list.Attributes.Any(a => a.IsStructIdTemplate())) &&
+                    node.ParameterList is { } parameters &&
+                    parameters.OpenParenToken.GetAllTrivia().Any(x => x.ToString().Contains("!string")))
                 {
-                    unique.Add(known.StructIdNamespace);
-                    return old.WithName(ParseName(known.StructIdNamespace));
+                    nostring = true;
                 }
-
-                if (unique.Add(old.Name?.ToString() ?? ""))
-                    return old;
-
-                return null!;
-            });
-
-            var code = root.SyntaxTree.GetRoot().ToFullString().Trim();
-
-            return code;
-        }
-    }
-
-    class ValueTypeRewriter(INamedTypeSymbol originalType, INamedTypeSymbol targetType) : CSharpSyntaxRewriter
-    {
-        // rewrite references to the original type with the target type
-        public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
-        {
-            if (node.Identifier.Text == originalType.Name)
-                return IdentifierName(targetType.ToFullName());
-
-            return base.VisitIdentifierName(node);
+            }
         }
     }
 
@@ -224,21 +187,7 @@ public partial class TemplatedGenerator : IIncrementalGenerator
                 var tid = structId.IsGenericType ? (INamedTypeSymbol)structId.TypeArguments[0] : known.String;
                 // If the TId/Value implements or inherits from the template base type and/or its interfaces
                 return templates
-                    // check struct id's value type against the template's TId for compatibility
-                    .Where(template =>
-                        tid.Equals(template.TId, SymbolEqualityComparer.Default) ||
-                        tid.Is(template.TId) ||
-                        // If the template had a generic attribute, we'd be looking at an intermediate 
-                        // type (typically TValue or TId) being used to define multiple constraints on 
-                        // the struct id's value type, such as implementing multiple interfaces. In 
-                        // this case, the tid would never equal or inherit from the template's TId, 
-                        // but we want instead to check for base type compatibility plus all interfaces.
-                        (template.IsLocalTId &&
-                         // TId is a derived class of the template's TId base type (i.e. object or ValueType)
-                         tid.Is(template.TId.BaseType) &&
-                         // All template provided TId interfaces must be implemented by the struct id's TId
-                         template.TId.AllInterfaces.All(iface =>
-                            tid.AllInterfaces.Any(tface => tface.Is(iface)))))
+                    .Where(template => template.AppliesTo(tid))
                     .Select(template => new IdTemplate(id, tid, template));
             });
 
@@ -247,32 +196,12 @@ public partial class TemplatedGenerator : IIncrementalGenerator
 
     void GenerateCode(SourceProductionContext context, IdTemplate source)
     {
-        var hintName = $"{source.StructId.ToFileName()}/{source.Template.TId.ToFileName()}.cs";
-        var output = TIdExpr.Replace(
-            TSelfExpr.Replace(source.Template.Text, source.StructId.Name),
-            source.TId.ToFullName());
+        var templateFile = Path.GetFileNameWithoutExtension(source.Template.Syntax.SyntaxTree.FilePath);
+        var hintName = $"{source.StructId.ToFileName()}/{templateFile}.cs";
 
-        if (source.StructId.ContainingNamespace.Equals(source.StructId.ContainingModule.GlobalNamespace, SymbolEqualityComparer.Default))
-        {
-            // No need to tweak target namespace.
-            context.AddSource(hintName, SourceText.From(output, Encoding.UTF8));
-            return;
-        }
+        var applied = source.Template.Syntax.Apply(source.StructId);
+        var output = applied.ToFullString();
 
-        // parse template into a C# compilation unit
-        var syntax = CSharpSyntaxTree.ParseText(output).GetCompilationUnitRoot();
-
-        // if we got a ns, move all members after a file-scoped namespace declaration
-        var members = syntax.Members;
-        var fsns = FileScopedNamespaceDeclaration(ParseName(source.StructId.ContainingNamespace.ToDisplayString())
-            .WithLeadingTrivia(Whitespace(" ")))
-            .WithLeadingTrivia(LineFeed)
-            .WithTrailingTrivia(LineFeed, LineFeed)
-            .WithMembers(members);
-
-        syntax = syntax.WithMembers(SingletonList<MemberDeclarationSyntax>(fsns));
-
-        output = syntax.ToFullString();
         context.AddSource(hintName, SourceText.From(output, Encoding.UTF8));
     }
 }

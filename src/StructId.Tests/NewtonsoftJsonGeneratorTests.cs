@@ -17,9 +17,8 @@ public class NewtonsoftJsonGeneratorTests
     [Fact]
     public async Task DoesNotGenerateIfNewtonsoftJsonNotPresent()
     {
-        var test = new CSharpSourceGeneratorTest<NewtonsoftJsonGenerator, DefaultVerifier>
+        var test = new StructIdGeneratorTest<NewtonsoftJsonGenerator>("UserId", "int")
         {
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestState =
             {
                 Sources =
@@ -31,7 +30,7 @@ public class NewtonsoftJsonGeneratorTests
                     """,
                 },
             },
-        }.WithAnalyzerStructId();
+        };
 
         await test.RunAsync();
     }
@@ -39,7 +38,7 @@ public class NewtonsoftJsonGeneratorTests
     [Fact]
     public async Task GenerateIfNewtonsoftJsonPresent()
     {
-        var test = new StructIdSourceGeneratorTest<NewtonsoftJsonGenerator>("int")
+        var test = new StructIdGeneratorTest<NewtonsoftJsonGenerator>("UserId", "int")
         {
             SolutionTransforms =
             {
@@ -48,7 +47,6 @@ public class NewtonsoftJsonGeneratorTests
                     .AddMetadataReference(MetadataReference.CreateFromFile(typeof(JsonConvert).Assembly.Location))
                     .Solution ?? solution
             },
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             TestState =
             {
                 Sources =
@@ -62,54 +60,15 @@ public class NewtonsoftJsonGeneratorTests
                 GeneratedSources =
                 {
                     (typeof(NewtonsoftJsonGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.NewtonsoftJsonConverterT.Text.WithSelf("UserId", "int"),
+                    CodeTemplate.Apply(ThisAssembly.Resources.StructId.Templates.NewtonsoftJsonConverterT.Text, "UserId", "int"),
                     Encoding.UTF8),
                     (typeof(NewtonsoftJsonGenerator), "NewtonsoftJsonConverter.cs",
                     ThisAssembly.Resources.StructId.Templates.NewtonsoftJsonConverter_1.Text,
                     Encoding.UTF8)
                 },
             },
-        }.WithAnalyzerStructId();
+        };
 
         await test.RunAsync();
-    }
-
-    class StructIdSourceGeneratorTest<TGenerator> : CSharpSourceGeneratorTest<TGenerator, DefaultVerifier>
-        where TGenerator : new()
-    {
-        public StructIdSourceGeneratorTest(string? tvalue = null)
-        {
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
-
-            if (tvalue != null)
-            {
-                TestState.GeneratedSources.Add(
-                    (typeof(NewableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.NewableT.Text.WithSelf("UserId", tvalue),
-                    Encoding.UTF8));
-                TestState.GeneratedSources.Add(
-                    (typeof(ParsableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.ParsableT.Text.WithSelf("UserId", "int"),
-                    Encoding.UTF8));
-            }
-            else
-            {
-                TestState.GeneratedSources.Add(
-                    (typeof(NewableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.Newable.Text.WithSelf("UserId"),
-                    Encoding.UTF8));
-                TestState.GeneratedSources.Add(
-                    (typeof(ParsableGenerator), "UserId.cs",
-                    ThisAssembly.Resources.StructId.Templates.Parsable.Text.WithSelf("UserId"),
-                    Encoding.UTF8));
-            }
-        }
-
-        protected override IEnumerable<Type> GetSourceGenerators()
-        {
-            yield return typeof(NewableGenerator);
-            yield return typeof(ParsableGenerator);
-            yield return typeof(TGenerator);
-        }
     }
 }

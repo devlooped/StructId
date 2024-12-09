@@ -10,9 +10,8 @@ public class DapperGeneratorTests
     [Fact]
     public async Task GenerateHandler()
     {
-        var test = new CSharpSourceGeneratorTest<DapperGenerator, DefaultVerifier>
+        var test = new StructIdGeneratorTest<DapperGenerator>("UserId", "int")
         {
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
             SolutionTransforms =
             {
                 (solution, projectId) => solution
@@ -27,10 +26,7 @@ public class DapperGeneratorTests
                     """
                     using StructId;
 
-                    public readonly partial record struct UserId(int Value) : IStructId<int>, INewable<UserId, int>
-                    {
-                        public static UserId New(int value) => new(value);
-                    }
+                    public readonly partial record struct UserId(int Value): IStructId<int>;
                     """,
                 },
                 GeneratedSources =
@@ -40,7 +36,7 @@ public class DapperGeneratorTests
                     Encoding.UTF8)
                 },
             },
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
     }
@@ -72,7 +68,7 @@ public class DapperGeneratorTests
                     """,
                 },
             },
-        }.WithAnalyzerStructId();
+        }.WithAnalyzerDefaults();
 
         await test.RunAsync();
     }

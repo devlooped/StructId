@@ -3,8 +3,10 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System;
+using StructId;
 
-readonly partial record struct TSelf : ISpanParsable<TSelf>
+[TStructId]
+file readonly partial record struct TSelf(/*!string*/ TId Value) : IParsable<TSelf>
 {
     /// <inheritdoc cref="IParsable{TSelf}"/>
     public static TSelf Parse(string s, IFormatProvider? provider) => new(TId.Parse(s, provider));
@@ -20,19 +22,10 @@ readonly partial record struct TSelf : ISpanParsable<TSelf>
         result = default;
         return false;
     }
+}
 
-    /// <inheritdoc cref="ISpanParsable{TSelf}"/>
-    public static TSelf Parse(ReadOnlySpan<char> input, global::System.IFormatProvider? provider) => new(TId.Parse(input, provider));
-
-    /// <inheritdoc cref="ISpanParsable{TSelf}"/>
-    public static bool TryParse(ReadOnlySpan<char> input, IFormatProvider? provider, out TSelf result)
-    {
-        if (TId.TryParse(input, provider, out var value))
-        {
-            result = new TSelf(value);
-            return true;
-        }
-        result = default;
-        return false;
-    }
+file record struct TId : IParsable<TId>
+{
+    public static TId Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TId result) => throw new NotImplementedException();
 }
