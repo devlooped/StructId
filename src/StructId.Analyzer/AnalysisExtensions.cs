@@ -149,10 +149,18 @@ public static class AnalysisExtensions
 
     public static bool IsStructId(this ITypeSymbol type) => type.AllInterfaces.Any(x => x.Name == "IStructId");
 
+    public static bool IsStructIdTemplate(this AttributeData attribute)
+        => attribute.AttributeClass?.Name == "TStructId" || 
+           attribute.AttributeClass?.Name == "TStructIdAttribute";
+
     public static bool IsStructIdTemplate(this AttributeSyntax attribute)
         => attribute.Name.ToString() == "TStructId" || attribute.Name.ToString() == "TStructIdAttribute";
 
     public static bool IsPartial(this ITypeSymbol node) => node.DeclaringSyntaxReferences.Any(
         r => r.GetSyntax() is TypeDeclarationSyntax { Modifiers: { } modifiers } &&
             modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)));
+
+    public static bool IsFileLocal(this ITypeSymbol? node) => node != null && node.DeclaringSyntaxReferences.All(
+        r => r.GetSyntax() is TypeDeclarationSyntax { Modifiers: { } modifiers } &&
+            modifiers.Any(m => m.IsKind(SyntaxKind.FileKeyword)));
 }

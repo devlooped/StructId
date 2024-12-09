@@ -6,7 +6,7 @@ using System;
 using StructId;
 
 [TStructId]
-file readonly partial record struct TSelf(TId Value) : ISpanParsable<TSelf>
+file readonly partial record struct TSelf(/*!string*/ TId Value) : ISpanParsable<TSelf>
 {
     /// <inheritdoc cref="ISpanParsable{TSelf}"/>
     public static TSelf Parse(ReadOnlySpan<char> input, IFormatProvider? provider) => new(TId.Parse(input, provider));
