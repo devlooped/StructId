@@ -150,7 +150,7 @@ public static class AnalysisExtensions
     public static bool IsStructId(this ITypeSymbol type) => type.AllInterfaces.Any(x => x.Name == "IStructId");
 
     public static bool IsStructIdTemplate(this AttributeData attribute)
-        => attribute.AttributeClass?.Name == "TStructId" || 
+        => attribute.AttributeClass?.Name == "TStructId" ||
            attribute.AttributeClass?.Name == "TStructIdAttribute";
 
     public static bool IsStructIdTemplate(this AttributeSyntax attribute)
