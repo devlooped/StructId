@@ -101,4 +101,39 @@ public class CodeTemplateTests(ITestOutputHelper output)
             """).NormalizeWhitespace().ToFullString().Trim().ReplaceLineEndings(),
             applied.ReplaceLineEndings());
     }
+
+    [Fact]
+    public void RemovesFileLocalTypes()
+    {
+        var template =
+            """
+            using StructId;
+            
+            [TStructId]
+            file partial record struct TSelf
+            {
+              // From template
+            }
+
+            file record TSome;
+            file class TAnother;
+            file record struct TYetAnother;
+            """;
+
+        var applied = CodeTemplate.Apply(template, "Foo", "string", normalizeWhitespace: true);
+
+        output.WriteLine(applied);
+
+        Assert.Equal(
+            CodeTemplate.Parse(
+            """
+            using StructId;
+
+            partial record struct Foo
+            {
+              // From template
+            }            
+            """).NormalizeWhitespace().ToFullString().Trim().ReplaceLineEndings(),
+            applied.ReplaceLineEndings());
+    }
 }
