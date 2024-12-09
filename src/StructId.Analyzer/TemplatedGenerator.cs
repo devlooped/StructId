@@ -1,12 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Scriban;
 
 namespace StructId;
 
@@ -51,8 +49,7 @@ public partial class TemplatedGenerator : IIncrementalGenerator
         public INamedTypeSymbol? OriginalTId { get; init; }
 
         // A custom TId is a file-local type declaration.
-        public bool IsLocalTId => OriginalTId?.DeclaringSyntaxReferences
-            .All(x => x.GetSyntax() is TypeDeclarationSyntax decl && decl.Modifiers.Any(m => m.IsKind(SyntaxKind.FileKeyword))) == true;
+        public bool IsLocalTId => OriginalTId?.IsFileLocal == true;
 
         public SyntaxNode Syntax { get; } = TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot();
 
@@ -119,22 +116,15 @@ public partial class TemplatedGenerator : IIncrementalGenerator
 
         var templates = context.CompilationProvider
             .SelectMany((x, _) => x.GetAllTypes(includeReferenced: true).OfType<INamedTypeSymbol>())
-            .Combine(known)
             .Where(x =>
-                // Ensure template is a partial record struct
-                x.Left.TypeKind == TypeKind.Struct && x.Left.IsRecord &&
+                // Ensure template is a file-local partial record struct
+                x.TypeKind == TypeKind.Struct && x.IsRecord && x.IsFileLocal &&
                 // We can only work with templates where we have the actual syntax tree.
-                x.Left.DeclaringSyntaxReferences.Length == 1 &&
-                // The declaring syntax reference has a primary constructor with a single parameter named Value
-                // This would be enforced by an analyzer/codefix pair.
-                x.Left.DeclaringSyntaxReferences[0].GetSyntax() is TypeDeclarationSyntax declaration &&
-                declaration.ParameterList?.Parameters.Count == 1 &&
-                declaration.ParameterList.Parameters[0].Identifier.Text == "Value" &&
-                // And we can locate the TStructIdAttribute type that should be applied to it.
-                x.Right.TStructId != null &&
-                x.Left.GetAttributes().Any(a => a.AttributeClass != null &&
-                    // The attribute should either be the generic or regular TStructIdAttribute
-                    (a.AttributeClass.Is(x.Right.TStructId))))
+                x.DeclaringSyntaxReferences.Any(
+                    // And we can locate the TStructIdAttribute type that should be applied to it.
+                    r => r.GetSyntax() is TypeDeclarationSyntax declaration && x.GetAttributes().Any(
+                        a => a.IsStructIdTemplate())))
+            .Combine(known)
             .Select((x, cancellation) =>
             {
                 var (structId, known) = x;

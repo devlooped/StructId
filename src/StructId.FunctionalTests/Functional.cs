@@ -166,6 +166,14 @@ public class FunctionalTests(ITestOutputHelper output)
         }
     }
 
+    [Fact]
+    public void ImplementsFormattable()
+    {
+        Assert.IsAssignableFrom<IFormattable>(ProductId.New());
+        Assert.IsAssignableFrom<IFormattable>(UserId.New(123));
+        Assert.IsNotAssignableFrom<IFormattable>(WalletId.New("foo"));
+    }
+
     public class Context : DbContext
     {
         public Context(DbContextOptions<Context> options) : base(options) { }
