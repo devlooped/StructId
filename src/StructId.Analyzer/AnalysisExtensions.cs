@@ -29,10 +29,12 @@ public static class AnalysisExtensions
     /// Checks whether the <paramref name="this"/> type inherits or implements the 
     /// <paramref name="baseTypeOrInterface"/> type, even if it's a generic type.
     /// </summary>
-    public static bool Is(this ITypeSymbol? @this, ITypeSymbol? baseTypeOrInterface)
+    public static bool Is(this ITypeSymbol? @this, ITypeSymbol? baseTypeOrInterface, bool looseGenerics = true)
     {
         if (@this == null || baseTypeOrInterface == null)
             return false;
+
+        var fullName = @this.ToFullName();
 
         if (@this.Equals(baseTypeOrInterface, SymbolEqualityComparer.Default) == true)
             return true;
@@ -41,18 +43,19 @@ public static class AnalysisExtensions
             @this is INamedTypeSymbol namedActual &&
             namedActual.IsGenericType &&
             (namedActual.ConstructedFrom.Equals(namedExpected, SymbolEqualityComparer.Default) ||
-            namedActual.ConstructedFrom.Equals(namedExpected.OriginalDefinition, SymbolEqualityComparer.Default)))
+            // We optionally can consider a loose generic match based on the open generic.
+            (looseGenerics && namedActual.ConstructedFrom.Equals(namedExpected.OriginalDefinition, SymbolEqualityComparer.Default))))
             return true;
 
         foreach (var iface in @this.AllInterfaces)
-            if (iface.Is(baseTypeOrInterface))
+            if (iface.Is(baseTypeOrInterface, looseGenerics))
                 return true;
 
         if (@this.BaseType?.Name.Equals("object", StringComparison.OrdinalIgnoreCase) == true &&
             @this.BaseType?.Equals(baseTypeOrInterface, SymbolEqualityComparer.Default) != true)
             return false;
 
-        return Is(@this.BaseType, baseTypeOrInterface);
+        return Is(@this.BaseType, baseTypeOrInterface, looseGenerics);
     }
 
     public static string GetStructIdNamespace(this AnalyzerConfigOptions options)

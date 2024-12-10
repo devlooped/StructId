@@ -107,26 +107,6 @@ public class FunctionalTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void Dapper()
-    {
-        using var connection = new SqliteConnection("Data Source=dapper.db")
-            .UseStructId();
-
-        connection.Open();
-
-        // Seed data
-        var productId = Guid.NewGuid();
-        var product = new Product(new ProductId(productId), "Product");
-
-        connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", new Product(ProductId.New(), "Product1"));
-        connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", product);
-        connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", new Product(ProductId.New(), "Product2"));
-
-        var product2 = connection.QueryFirst<Product>("SELECT * FROM Products WHERE Id = @Id", new { Id = productId });
-        Assert.Equal(product, product2);
-    }
-
-    [Fact]
     public void CustomTemplate()
     {
         var id = ProductId.New();

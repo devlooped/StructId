@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel;
 using System.Data;
 using Dapper;
+using static Dapper.SqlMapper;
 
 namespace {{ Namespace }};
 
@@ -21,13 +22,41 @@ public static partial class DapperExtensions
     {
         {{~ for id in Ids ~}}
         if (!SqlMapper.HasTypeHandler(typeof({{ id.TSelf }})))
-            SqlMapper.AddTypeHandler(new DapperTypeHandler{{ id.TId }}<{{ id.TSelf }}>());        
+            SqlMapper.AddTypeHandler(new DapperTypeHandler{{ id.TId }}<{{ id.TSelf }}>());
 
-        {{~ end ~}}        
+        {{~ end ~}}
+        {{~ for id in CustomIds ~}}
+        if (!SqlMapper.HasTypeHandler(typeof({{ id.TSelf }})))
+            SqlMapper.AddTypeHandler(new DapperTypeHandler<{{ id.TSelf }}, {{ id.TId }}, {{ id.THandler }}>());
+
+        {{~ end ~}}
+        {{~ for handler in CustomHandlers ~}}
+        if (!SqlMapper.HasTypeHandler(typeof({{ handler }})))
+            SqlMapper.AddTypeHandler(new {{ handler }}());
+
+        {{~ end ~}}
+
         return connection;
     }
 
-    partial class DapperTypeHandlerInt64<TSelf> : SqlMapper.TypeHandler<TSelf>
+    partial class DapperTypeHandler<TSelf, TId, THandler> : TypeHandler<TSelf>
+        where TSelf : IStructId<TId>, INewable<TSelf, TId>
+        where THandler : TypeHandler<TId>, new()
+        where TId : struct
+    {
+        readonly THandler handler = new();
+
+        public override TSelf? Parse(object value) => TSelf.New(handler.Parse(value));
+        public override void SetValue(IDbDataParameter parameter, TSelf? value)
+        {
+            if (value?.Value is { } id)
+                handler.SetValue(parameter, value?.Value ?? default);
+            else
+                parameter.Value = DBNull.Value;
+        }
+    }
+
+    partial class DapperTypeHandlerInt64<TSelf> : TypeHandler<TSelf>
         where TSelf : IStructId<long>, INewable<TSelf, long>
     {
         public override void SetValue(IDbDataParameter parameter, TSelf? value)
@@ -55,7 +84,7 @@ public static partial class DapperExtensions
         }
     }
 
-    partial class DapperTypeHandlerInt32<TSelf> : SqlMapper.TypeHandler<TSelf>
+    partial class DapperTypeHandlerInt32<TSelf> : TypeHandler<TSelf>
         where TSelf : IStructId<int>, INewable<TSelf, int>
     {
         public override void SetValue(IDbDataParameter parameter, TSelf? value)
@@ -82,7 +111,7 @@ public static partial class DapperExtensions
         }
     }
 
-    partial class DapperTypeHandlerGuid<TSelf> : SqlMapper.TypeHandler<TSelf>
+    partial class DapperTypeHandlerGuid<TSelf> : TypeHandler<TSelf>
         where TSelf : IStructId<Guid>, INewable<TSelf, Guid>
     {
         public override void SetValue(IDbDataParameter parameter, TSelf? value)
@@ -107,7 +136,7 @@ public static partial class DapperExtensions
         }
     }
 
-    partial class DapperTypeHandlerString<TSelf> : SqlMapper.TypeHandler<TSelf>
+    partial class DapperTypeHandlerString<TSelf> : TypeHandler<TSelf>
         where TSelf : IStructId, INewable<TSelf>
     {
         public override void SetValue(IDbDataParameter parameter, TSelf? value)

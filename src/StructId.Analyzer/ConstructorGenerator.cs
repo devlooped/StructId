@@ -15,5 +15,5 @@ public class ConstructorGenerator() : BaseGenerator(
     // we cannot switch this to the simpler compiled templates, which don't have conditional logic
     protected override IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source)
         => base.OnInitialize(context, source.Where(x
-            => x.StructId.DeclaringSyntaxReferences.Select(r => r.GetSyntax()).OfType<TypeDeclarationSyntax>().All(s => s.ParameterList == null)));
+            => x.TSelf.DeclaringSyntaxReferences.Select(r => r.GetSyntax()).OfType<TypeDeclarationSyntax>().All(s => s.ParameterList == null)));
 }
