@@ -174,4 +174,26 @@ public class TemplateAnalyzerTests
 
         await test.RunAsync();
     }
+
+    [Fact]
+    public async Task PartialTSelfNotFileLocal()
+    {
+        var test = new Test
+        {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
+            TestCode =
+                """
+                using StructId;
+
+                [TStructId]
+                file partial record struct TSelf;
+
+                partial record struct {|#0:TSelf|};
+                """,
+        }.WithAnalyzerDefaults();
+
+        test.ExpectedDiagnostics.Add(Verifier.Diagnostic(Diagnostics.TemplateMustBeFileRecordStruct).WithLocation(0).WithArguments("TSelf"));
+
+        await test.RunAsync();
+    }
 }
