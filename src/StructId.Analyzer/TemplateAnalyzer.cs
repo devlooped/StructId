@@ -40,9 +40,17 @@ public class TemplateAnalyzer : DiagnosticAnalyzer
         if (symbol is null)
             return;
 
-        if (!symbol.IsFileLocal || !symbol.IsPartial() || !typeDeclaration.IsKind(SyntaxKind.RecordStructDeclaration))
+        if (!symbol.IsPartial() || !typeDeclaration.IsKind(SyntaxKind.RecordStructDeclaration))
         {
             context.ReportDiagnostic(Diagnostic.Create(TemplateMustBeFileRecordStruct, typeDeclaration.Identifier.GetLocation(), symbol.Name));
+        }
+
+        foreach (var nonLocal in symbol.DeclaringSyntaxReferences
+            .Select(x => x.GetSyntax() as TypeDeclarationSyntax)
+            .Where(x => x != null && !x.Modifiers.Any(m => m.IsKind(SyntaxKind.FileKeyword))))
+        {
+            // We report the issue at each declaration, since ALL need to be file-local to be picked up by the code template cleanup.
+            context.ReportDiagnostic(Diagnostic.Create(TemplateMustBeFileRecordStruct, nonLocal!.Identifier.GetLocation(), symbol.Name));
         }
 
         // If there are parameters, it must be only one, and be named Value
