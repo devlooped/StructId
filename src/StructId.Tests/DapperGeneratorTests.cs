@@ -1,11 +1,12 @@
 ﻿using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 
 namespace StructId;
 
-public class DapperGeneratorTests
+public class DapperGeneratorTests(ITestOutputHelper output)
 {
     [Fact]
     public async Task GenerateHandler()
@@ -33,6 +34,64 @@ public class DapperGeneratorTests
                 {
                     (typeof(DapperGenerator), "DapperExtensions.cs",
                     DapperGenerator.Render("StructId", "UserId", "Int32"),
+                    Encoding.UTF8)
+                },
+            },
+        }.WithAnalyzerDefaults();
+
+        await test.RunAsync();
+    }
+
+    [Fact]
+    public async Task GenerateCustomHandler()
+    {
+        output.WriteLine(DapperGenerator.RenderCustom("StructId", "UserId", "Ulid", "StringUlidHandler"));
+
+        var test = new StructIdGeneratorTest<DapperGenerator>("UserId", "System.Ulid")
+        {
+            SolutionTransforms =
+            {
+                (solution, projectId) => solution
+                    .GetProject(projectId)?
+                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Dapper.DbString).Assembly.Location))
+                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Ulid).Assembly.Location))
+                    .Solution ?? solution
+            },
+            TestState =
+            {
+                Sources =
+                {
+                    """
+                    using System;
+                    using StructId;
+
+                    public readonly partial record struct UserId(Ulid Value): IStructId<Ulid>;
+                    """,
+                    """
+                    using System;
+                    using System.Data;
+                    using Dapper;
+                    
+                    public class StringUlidHandler : Dapper.SqlMapper.TypeHandler<Ulid>
+                    {
+                        public override Ulid Parse(object value)
+                        {
+                            return Ulid.Parse((string)value);
+                        }
+
+                        public override void SetValue(IDbDataParameter parameter, Ulid value)
+                        {
+                            parameter.DbType = DbType.StringFixedLength;
+                            parameter.Size = 26;
+                            parameter.Value = value.ToString();
+                        }
+                    }
+                    """
+                },
+                GeneratedSources =
+                {
+                    (typeof(DapperGenerator), "DapperExtensions.cs",
+                    DapperGenerator.RenderCustom("StructId", "UserId", "Ulid", "StringUlidHandler"),
                     Encoding.UTF8)
                 },
             },

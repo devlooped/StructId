@@ -27,7 +27,7 @@ public class EntityFrameworkGenerator() : BaseGenerator(
         if (args.Length == 0)
             return;
 
-        var model = new SelectorModel(args.Select(x => new StructIdModel(x.StructId.ToFullName(), x.ValueType.ToFullName())));
+        var model = new SelectorModel(args.Select(x => new StructIdModel(x.TSelf.ToFullName(), x.TId.ToFullName())));
         var output = template.Render(model, member => member.Name);
         context.AddSource($"ValueConverterSelector.cs", output);
     }
