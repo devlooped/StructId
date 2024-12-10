@@ -122,8 +122,6 @@ public class CodeTemplateTests(ITestOutputHelper output)
 
         var applied = CodeTemplate.Apply(template, "Foo", "string", normalizeWhitespace: true);
 
-        output.WriteLine(applied);
-
         Assert.Equal(
             CodeTemplate.Parse(
             """
@@ -135,5 +133,37 @@ public class CodeTemplateTests(ITestOutputHelper output)
             }            
             """).NormalizeWhitespace().ToFullString().Trim().ReplaceLineEndings(),
             applied.ReplaceLineEndings());
+    }
+
+    [Fact]
+    public void PreservesTrivia()
+    {
+        var template =
+            """
+            using System;
+
+            // Test
+            [TStructId]
+            file partial record struct TSelf(Ulid Value)
+            {
+                public static TSelf New() => new(Ulid.NewUlid());
+            }
+            """;
+
+        var applied = CodeTemplate.Apply(template, "ItemId", "Ulid");
+
+        Assert.Equal(
+            """
+            using System;
+            
+            // Test
+            partial record struct ItemId
+            {
+                public static ItemId New() => new(Ulid.NewUlid());
+            }
+            """,
+            applied);
+
+        output.WriteLine(applied);
     }
 }

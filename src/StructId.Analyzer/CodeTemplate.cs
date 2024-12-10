@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -115,16 +116,35 @@ public static class CodeTemplate
                         .WithOpenParenToken(parameters.OpenParenToken.WithoutTrivia()));
                 else
                     node = node.WithParameterList(null);
+
+                node = node.WithIdentifier(node.Identifier.WithTrailingTrivia(parameters.CloseParenToken.TrailingTrivia));
             }
 
             var visited = (RecordDeclarationSyntax)base.VisitRecordDeclaration(node)!;
+            var trivia = TriviaList();
+            // Rather than removing the empty attribute lists via the VisitAttributeList method, we do it here
+            // so we can preserve the trivia.
+            foreach (var list in visited.AttributeLists)
+            {
+                if (list.Attributes.Count == 0)
+                {
+                    trivia = trivia.AddRange(list.GetLeadingTrivia());
+                    visited = visited.RemoveNode(list, SyntaxRemoveOptions.KeepNoTrivia)!;
+                }
+            }
+
+            if (trivia.Count > 0)
+                visited = visited.WithLeadingTrivia(trivia);
 
             // remove file modifier from type declarations
             if (visited.Modifiers.FirstOrDefault(x => x.IsKind(SyntaxKind.FileKeyword)) is { } file)
-                // Preserve trivia, i.e. newline from original file modifier
-                return visited
-                    .WithLeadingTrivia(file.LeadingTrivia)
-                    .WithModifiers(visited.Modifiers.Remove(file));
+            {
+                // Preserve trivia, i.e. newline from original file modifier, as well as potentially 
+                // other trivia we might have added from removed attribute lists
+                visited = visited
+                    .WithModifiers(visited.Modifiers.Remove(file))
+                    .WithLeadingTrivia(file.LeadingTrivia);
+            }
 
             return visited;
         }
@@ -146,15 +166,6 @@ public static class CodeTemplate
                 return null;
 
             return base.VisitClassDeclaration(node);
-        }
-
-        public override SyntaxNode? VisitAttributeList(AttributeListSyntax node)
-        {
-            node = (AttributeListSyntax)base.VisitAttributeList(node)!;
-            if (node.Attributes.Count == 0)
-                return null;
-
-            return node;
         }
 
         public override SyntaxNode? VisitAttribute(AttributeSyntax node)
