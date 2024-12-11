@@ -101,7 +101,11 @@ connection.UseStructId();
 connection.Open();
 ```
 
-The supported types are `Guid`, `int`, `long` and `string` for now.
+The value types `Guid`, `int`, `long` and `string` have built-in support, as well as 
+any other types that implement `IParsable<T>` and `IFormattable` (by persisting them 
+as strings). This means that you can, for example, use [Ulid](https://github.com/Cysharp/Ulid) 
+out of the box without any further configuration or customization (since it implements 
+both interfaces).
 
 ## Customization via Templates
 

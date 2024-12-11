@@ -46,6 +46,13 @@ public static class StructIdDbContextOptionsBuilderExtensions
                     info => new {{ id.TSelf }}.EntityFrameworkValueConverter(info.MappingHints)));
 
             {{~ end ~}}
+            {{~ for converter in Converters ~}}
+            if (modelClrType == typeof({{ converter.TModel }}))
+                yield return converters.GetOrAdd((modelClrType, providerClrType), key => new ValueConverterInfo(
+                    key.ModelClrType, key.ProviderClrType ?? typeof({{ converter.TProvider }}),
+                    info => new {{ converter.TConverter }}(info.MappingHints)));
+
+            {{~ end ~}}
         }
 
         static Type? Unwrap(Type? type)

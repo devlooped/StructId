@@ -17,18 +17,36 @@ public class EntityFrameworkGenerator() : BaseGenerator(
 
     protected override IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source)
     {
-        context.RegisterSourceOutput(source.Collect(), GenerateValueSelector);
+        var converters = context.CompilationProvider
+            .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
+            .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName("Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter`2")))
+            .Where(x => x.Left != null && x.Right != null &&
+                x.Left.Is(x.Right) &&
+                !x.Left.IsUnboundGenericType &&
+                x.Left.BaseType?.TypeArguments.Length == 2 &&
+                // Don't emit as plain converters if they are id templates
+                !x.Left.GetAttributes().Any(a => a.IsValueTemplate()))
+            .Select((x, _) => x.Left)
+            .Collect();
+
+        context.RegisterSourceOutput(source.Collect().Combine(converters), GenerateValueSelector);
 
         return base.OnInitialize(context, source);
     }
 
-    void GenerateValueSelector(SourceProductionContext context, ImmutableArray<TemplateArgs> args)
+    void GenerateValueSelector(SourceProductionContext context, (ImmutableArray<TemplateArgs>, ImmutableArray<INamedTypeSymbol>) args)
     {
-        if (args.Length == 0)
+        (var ids, var converters) = args;
+
+        if (ids.Length == 0)
             return;
 
-        var model = new SelectorModel(args.Select(x => new StructIdModel(x.TSelf.ToFullName(), x.TId.ToFullName())));
+        var model = new SelectorModel(
+            ids.Select(x => new StructIdModel(x.TSelf.ToFullName(), x.TId.ToFullName())),
+            converters.Select(x => new ConverterModel(x.BaseType!.TypeArguments[0].ToFullName(), x.BaseType!.TypeArguments[1].ToFullName(), x.ToFullName())));
+
         var output = template.Render(model, member => member.Name);
+
         context.AddSource($"ValueConverterSelector.cs", output);
     }
 
@@ -59,5 +77,7 @@ public class EntityFrameworkGenerator() : BaseGenerator(
         };
     }
 
-    record SelectorModel(IEnumerable<StructIdModel> Ids);
+    record ConverterModel(string TModel, string TProvider, string TConverter);
+
+    record SelectorModel(IEnumerable<StructIdModel> Ids, IEnumerable<ConverterModel> Converters);
 }

@@ -42,8 +42,7 @@
   <Import Project="..\StructId.Package\StructId.targets" />
 
   <ItemGroup>
-    <None Update="dapper.db" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="ef.db" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="*.db" CopyToOutputDirectory="PreserveNewest" />
     <UpToDateCheck Include="@(StructId)" />
   </ItemGroup>
 

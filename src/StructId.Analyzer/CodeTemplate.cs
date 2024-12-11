@@ -10,10 +10,10 @@ namespace StructId;
 
 public static class CodeTemplate
 {
-    public static SyntaxNode Parse(string template)
+    public static SyntaxNode Parse(string template, CSharpParseOptions? parseOptions = default)
     {
         var tree = CSharpSyntaxTree.ParseText(template,
-            CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest));
+            parseOptions ?? CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest));
 
         return tree.GetRoot();
     }
@@ -29,6 +29,17 @@ public static class CodeTemplate
             applied.NormalizeWhitespace().ToFullString() :
             applied.ToFullString();
     }
+
+    public static string Apply(string template, string valueType, bool normalizeWhitespace = false)
+    {
+        var applied = ApplyImpl(Parse(template), valueType);
+
+        return normalizeWhitespace ?
+            applied.NormalizeWhitespace().ToFullString().Trim() :
+            applied.ToFullString().Trim();
+    }
+
+    public static SyntaxNode ApplyValue(this SyntaxNode node, INamedTypeSymbol valueType) => ApplyImpl(node, valueType.ToFullName());
 
     public static SyntaxNode Apply(this SyntaxNode node, INamedTypeSymbol structId)
     {
@@ -47,6 +58,17 @@ public static class CodeTemplate
             structId.ContainingNamespace.ToDisplayString() : null;
 
         return ApplyImpl(root, structId.Name, tid, targetNamespace, corens);
+    }
+
+    static SyntaxNode ApplyImpl(this SyntaxNode node, string valueType)
+    {
+        var root = node.SyntaxTree.GetCompilationUnitRoot();
+        if (root == null)
+            return node;
+
+        node = new ValueRewriter(valueType).Visit(root)!;
+
+        return node;
     }
 
     static SyntaxNode ApplyImpl(this SyntaxNode node, string structIdType, string valueType, string? targetNamespace = default, string coreNamespace = "StructId")
@@ -93,6 +115,84 @@ public static class CodeTemplate
         node = new TemplateRewriter(structIdType, valueType).Visit(root)!;
 
         return node;
+    }
+
+    class ValueRewriter(string tvalue) : CSharpSyntaxRewriter
+    {
+        public override SyntaxNode? VisitRecordDeclaration(RecordDeclarationSyntax node)
+        {
+            if (IsFileLocal(node))
+                return null;
+
+            return node;
+        }
+
+        public override SyntaxNode? VisitStructDeclaration(StructDeclarationSyntax node)
+        {
+            if (IsFileLocal(node))
+                return null;
+
+            return base.VisitStructDeclaration(node);
+        }
+
+        public override SyntaxNode? VisitClassDeclaration(ClassDeclarationSyntax node)
+        {
+            if (IsFileLocal(node))
+                return null;
+
+            return base.VisitClassDeclaration(node);
+        }
+
+        public override SyntaxNode? VisitAttribute(AttributeSyntax node)
+        {
+            if (node.IsValueTemplate())
+                return null;
+
+            return base.VisitAttribute(node);
+        }
+
+        public override SyntaxNode? VisitAttributeList(AttributeListSyntax node)
+        {
+            node = (AttributeListSyntax)base.VisitAttributeList(node)!;
+            if (node.Attributes.Count == 0)
+                return null;
+
+            return base.VisitAttributeList(node);
+        }
+
+        public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+        {
+            if (node.Identifier.Text == "TValue")
+                return IdentifierName(tvalue)
+                    .WithLeadingTrivia(node.Identifier.LeadingTrivia)
+                    .WithTrailingTrivia(node.Identifier.TrailingTrivia);
+
+            if (node.Identifier.Text.StartsWith("TValue_"))
+                return IdentifierName(node.Identifier.Text.Replace("TValue_", tvalue.Replace('.', '_') + "_"))
+                    .WithLeadingTrivia(node.Identifier.LeadingTrivia)
+                    .WithTrailingTrivia(node.Identifier.TrailingTrivia);
+
+            return base.VisitIdentifierName(node);
+        }
+
+        public override SyntaxToken VisitToken(SyntaxToken token)
+        {
+            if (token.IsKind(SyntaxKind.IdentifierToken) && token.Text == "TValue")
+                return Identifier(tvalue)
+                    .WithLeadingTrivia(token.LeadingTrivia)
+                    .WithTrailingTrivia(token.TrailingTrivia);
+
+            if (token.IsKind(SyntaxKind.IdentifierToken) && token.Text.StartsWith("TValue_"))
+                return Identifier(token.Text.Replace("TValue_", tvalue.Replace('.', '_') + "_"))
+                    .WithLeadingTrivia(token.LeadingTrivia)
+                    .WithTrailingTrivia(token.TrailingTrivia);
+
+            return base.VisitToken(token);
+        }
+
+        bool IsFileLocal(TypeDeclarationSyntax node) =>
+            node.Modifiers.Any(x => x.IsKind(SyntaxKind.FileKeyword)) &&
+            !node.AttributeLists.Any(list => list.Attributes.Any(a => a.IsValueTemplate()));
     }
 
     class TemplateRewriter(string tself, string tid) : CSharpSyntaxRewriter
@@ -183,7 +283,7 @@ public static class CodeTemplate
                 return IdentifierName(tself)
                     .WithLeadingTrivia(node.Identifier.LeadingTrivia)
                     .WithTrailingTrivia(node.Identifier.TrailingTrivia);
-            else if (node.Identifier.Text == "TId")
+            else if (node.Identifier.Text == "TId" || node.Identifier.Text == "TValue")
                 return IdentifierName(tid)
                     .WithLeadingTrivia(node.Identifier.LeadingTrivia)
                     .WithTrailingTrivia(node.Identifier.TrailingTrivia);
@@ -198,7 +298,7 @@ public static class CodeTemplate
                 return Identifier(tself)
                     .WithLeadingTrivia(token.LeadingTrivia)
                     .WithTrailingTrivia(token.TrailingTrivia);
-            else if (token.IsKind(SyntaxKind.IdentifierToken) && token.Text == "TId")
+            else if (token.IsKind(SyntaxKind.IdentifierToken) && (token.Text == "TId" || token.Text == "TValue"))
                 return Identifier(tid)
                     .WithLeadingTrivia(token.LeadingTrivia)
                     .WithTrailingTrivia(token.TrailingTrivia);

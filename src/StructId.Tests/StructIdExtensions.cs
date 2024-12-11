@@ -24,6 +24,7 @@ public static partial class StructIdExtensions
         AddSourceIfNotExists(test.FixedState.Sources, "INewable.cs", ThisAssembly.Resources.StructId.INewable.Text);
         AddSourceIfNotExists(test.FixedState.Sources, "INewableT.cs", ThisAssembly.Resources.StructId.INewableT.Text);
         AddSourceIfNotExists(test.FixedState.Sources, "TStructIdAttribute.cs", ThisAssembly.Resources.StructId.TStructIdAttribute.Text);
+        AddSourceIfNotExists(test.FixedState.Sources, "TValueAttribute.cs", ThisAssembly.Resources.StructId.TValueAttribute.Text);
 
         return test;
     }
@@ -33,7 +34,7 @@ public static partial class StructIdExtensions
         test.SolutionTransforms.Add((solution, projectId) =>
         {
             var project = solution.GetProject(projectId)!;
-            var parseOptions = ((CSharpParseOptions)project.ParseOptions!).WithLanguageVersion(LanguageVersion.CSharp12);
+            var parseOptions = ((CSharpParseOptions)project.ParseOptions!).WithLanguageVersion(LanguageVersion.Latest);
 
             return project.WithParseOptions(parseOptions).Solution;
         });
@@ -43,6 +44,7 @@ public static partial class StructIdExtensions
         AddSourceIfNotExists(test.TestState.Sources, "INewable.cs", ThisAssembly.Resources.StructId.INewable.Text);
         AddSourceIfNotExists(test.TestState.Sources, "INewableT.cs", ThisAssembly.Resources.StructId.INewableT.Text);
         AddSourceIfNotExists(test.TestState.Sources, "TStructIdAttribute.cs", ThisAssembly.Resources.StructId.TStructIdAttribute.Text);
+        AddSourceIfNotExists(test.TestState.Sources, "TValueAttribute.cs", ThisAssembly.Resources.StructId.TValueAttribute.Text);
 
         return test;
     }

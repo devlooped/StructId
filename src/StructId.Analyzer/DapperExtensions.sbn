@@ -22,20 +22,24 @@ public static partial class DapperExtensions
     {
         {{~ for id in Ids ~}}
         if (!SqlMapper.HasTypeHandler(typeof({{ id.TSelf }})))
-            SqlMapper.AddTypeHandler(new DapperTypeHandler{{ id.TId }}<{{ id.TSelf }}>());
+            SqlMapper.AddTypeHandler(new DapperTypeHandler{{ id.TValue }}<{{ id.TSelf }}>());
 
         {{~ end ~}}
         {{~ for id in CustomIds ~}}
         if (!SqlMapper.HasTypeHandler(typeof({{ id.TSelf }})))
-            SqlMapper.AddTypeHandler(new DapperTypeHandler<{{ id.TSelf }}, {{ id.TId }}, {{ id.THandler }}>());
+            SqlMapper.AddTypeHandler(new DapperTypeHandler<{{ id.TSelf }}, {{ id.TValue }}, {{ id.THandler }}>());
 
         {{~ end ~}}
-        {{~ for handler in CustomHandlers ~}}
-        if (!SqlMapper.HasTypeHandler(typeof({{ handler }})))
-            SqlMapper.AddTypeHandler(new {{ handler }}());
+        {{~ for handler in CustomValues ~}}
+        if (!SqlMapper.HasTypeHandler(typeof({{ handler.TValue }})))
+            SqlMapper.AddTypeHandler(new {{ handler.THandler }}());
 
         {{~ end ~}}
+        {{~ for handler in TemplatizedValueHandlers ~}}
+        if (!SqlMapper.HasTypeHandler(typeof({{ handler.TValue }})))
+            SqlMapper.AddTypeHandler(new {{ handler.THandler }}());
 
+        {{~ end ~}}
         return connection;
     }
 
@@ -160,3 +164,7 @@ public static partial class DapperExtensions
         }
     }
 }
+
+{{~ for handler in TemplatizedValueHandlers ~}}
+{{ handler.Code }}
+{{~ end ~}}

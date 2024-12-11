@@ -163,7 +163,48 @@ public class CodeTemplateTests(ITestOutputHelper output)
             }
             """,
             applied);
+    }
 
-        output.WriteLine(applied);
+    [Fact]
+    public void AppliesValueTemplate()
+    {
+        var template =
+            """
+            using System;
+
+            [TValue]
+            file class TValue_TypeHandler : Dapper.SqlMapper.TypeHandler<TValue>
+            {
+                public override TValue Parse(object value) => TValue.Parse((string)value, null);
+
+                public override void SetValue(IDbDataParameter parameter, TValue value)
+                {
+                    parameter.DbType = DbType.String;
+                    parameter.Value = value.ToString(null, null);
+                }
+            }
+            
+            file partial struct TValue : IParsable<TValue>, IFormattable
+            {
+            }
+            """;
+
+        var applied = CodeTemplate.Apply(template, "System.Ulid");
+
+        Assert.Equal(
+            """
+            using System;
+            file class System_Ulid_TypeHandler : Dapper.SqlMapper.TypeHandler<System.Ulid>
+            {
+                public override System.Ulid Parse(object value) => System.Ulid.Parse((string)value, null);
+            
+                public override void SetValue(IDbDataParameter parameter, System.Ulid value)
+                {
+                    parameter.DbType = DbType.String;
+                    parameter.Value = value.ToString(null, null);
+                }
+            }
+            """,
+            applied);
     }
 }

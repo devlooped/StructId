@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Scriban;
 
 namespace StructId;
@@ -14,7 +16,7 @@ public class DapperGenerator() : BaseGenerator(
 
     protected override IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source)
     {
-        var supported = source.Where(x => x.TId.ToFullName() switch
+        bool IsBuiltIn(string type) => type switch
         {
             "System.String" => true,
             "System.Guid" => true,
@@ -24,62 +26,130 @@ public class DapperGenerator() : BaseGenerator(
             "int" => true,
             "long" => true,
             _ => false
-        });
+        };
 
-        var handlers = context.CompilationProvider
+        var builtInHandled = source.Where(x => IsBuiltIn(x.TId.ToFullName()));
+
+        var customHandlers = context.CompilationProvider
             .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
             .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName("Dapper.SqlMapper+TypeHandler`1")))
-            .Where(x => x.Left != null && x.Right != null && x.Left.Is(x.Right))
+            .Where(x => x.Left != null && x.Right != null &&
+                x.Left.Is(x.Right) &&
+                // Don't emit as plain handlers if they are id templates
+                !x.Left.GetAttributes().Any(a => a.IsValueTemplate()))
             .Select((x, _) => x.Left)
             .Collect();
 
-        var custom = source
-            .Combine(handlers)
+        var templatizedValues = context.SelectTemplatizedValues()
+            .Where(x => !IsBuiltIn(x.TValue.ToFullName()))
+            .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName("Dapper.SqlMapper+TypeHandler`1")))
+            .Where(x => x.Left.Template.TTemplate.Is(x.Right))
+            .Select((x, _) => x.Left);
+
+        var customHandled = source
+            .Combine(customHandlers.Combine(templatizedValues.Collect()))
             .Select((x, _) =>
             {
-                (TemplateArgs args, ImmutableArray<INamedTypeSymbol> handlers) = x;
+                (TemplateArgs args, (ImmutableArray<INamedTypeSymbol> handlers, ImmutableArray<TValueTemplate> templatized)) = x;
 
                 var handlerType = args.ReferenceType.Construct(args.TId);
                 var handler = handlers.FirstOrDefault(x => x.Is(handlerType, false));
+
+                if (handler == null)
+                {
+                    var templated = templatized.Where(x => x.TValue.Equals(args.TId, SymbolEqualityComparer.Default))
+                        .FirstOrDefault();
+                    // Consider templatized handlers that will be emitted as custom handlers too for registration.
+                    if (templated != null)
+                    {
+                        var compilation = args.KnownTypes.Compilation.AddSyntaxTrees(templated.Syntax.SyntaxTree);
+                        handler = compilation.Assembly.GetAllTypes().FirstOrDefault(x => x.Name == templated.TypeName);
+                    }
+                }
 
                 return args with { ReferenceType = handler! };
             })
             .Where(x => x.ReferenceType != null);
 
-        context.RegisterSourceOutput(supported.Collect().Combine(custom.Collect()), GenerateHandlers);
+        context.RegisterSourceOutput(builtInHandled.Collect().Combine(customHandled.Collect()).Combine(templatizedValues.Collect()), GenerateHandlers);
 
         // Turn off codegen in the base template.
         return source.Where(x => false);
     }
 
-    void GenerateHandlers(SourceProductionContext context, (ImmutableArray<TemplateArgs> ids, ImmutableArray<TemplateArgs> custom) source)
+    void GenerateHandlers(SourceProductionContext context, ((ImmutableArray<TemplateArgs> builtInHandled, ImmutableArray<TemplateArgs> customHandled), ImmutableArray<TValueTemplate> templatizedValues) source)
     {
-        var (ids, custom) = source;
-        if (ids.Length == 0 && custom.Length == 0)
+        var ((builtInHandled, customHandled), templatizedValues) = source;
+        if (builtInHandled.Length == 0 && customHandled.Length == 0 && templatizedValues.Length == 0)
             return;
 
-        var known = ids.Concat(custom).First().KnownTypes;
-        var customHandlers = custom.Select(x => x.ReferenceType.ToFullName()).Distinct().ToArray();
+        var structIdNamespace = builtInHandled.Concat(customHandled).Select(x => x.KnownTypes.StructIdNamespace).FirstOrDefault()
+            ?? "StructId";
+
+        var templatizedHandlers = new HashSet<string>(templatizedValues
+            .Select(x => x.TypeName));
+
+        var customValueHandlers = customHandled
+            .GroupBy(x => x.ReferenceType.ToFullName())
+            // Avoid registering twice the same templatized value handlers since they are 
+            // already added at the end of the scriban rendering.
+            .Where(x => !templatizedHandlers.Contains(x.Key))
+            .Select(x => new ValueHandlerModel(x.First().TId.ToFullName(), x.Key))
+            .ToArray();
 
         var model = new SelectorModel(
-            known.StructIdNamespace,
-            ids.Select(x => new StructIdModel(x.TSelf.ToFullName(), x.TId.Name)),
-            custom.Select(x => new StructIdCustomModel(x.TSelf.ToFullName(), x.TId.Name, x.ReferenceType.ToFullName())),
-            customHandlers);
+            structIdNamespace,
+            // Built-in use the Name of the value type since it's used as a suffix for well-known provided implementations.
+            builtInHandled.Select(x => new StructIdModel(x.TSelf.ToFullName(), x.TId.Name)),
+            customHandled.Select(x => new StructIdCustomModel(x.TSelf.ToFullName(), x.TId.ToFullName(), x.ReferenceType.ToFullName())),
+            customValueHandlers,
+            templatizedValues.Select(x => new ValueHandlerModelCode(x)));
 
         var output = template.Render(model, member => member.Name);
-        context.AddSource($"DapperExtensions.cs", output);
+        context.AddSource($"DapperExtensions.cs", output.Trim());
     }
 
-    public static string Render(string @namespace, string tself, string tid)
-        => template.Render(new SelectorModel(@namespace, [new(tself, tid)], [], []), member => member.Name);
+    public static string Render(string @namespace, string tself, string tvalue)
+        => template.Render(new SelectorModel(@namespace, [new(tself, tvalue)], [], [], []), member => member.Name).Trim();
 
-    public static string RenderCustom(string @namespace, string tself, string tid, string thandler)
-        => template.Render(new SelectorModel(@namespace, [], [new(tself, tid, thandler)], [thandler]), member => member.Name);
+    public static string RenderCustom(string @namespace, string tself, string tvalue, string thandler)
+        => template.Render(new SelectorModel(@namespace, [], [new(tself, tvalue, thandler)], [new(tvalue, thandler)], []), member => member.Name).Trim();
 
-    record StructIdModel(string TSelf, string TId);
+    public static string RenderTemplatized(string @namespace, string tself, string tvalue, string thandler, string handlerCode)
+        => template.Render(new SelectorModel(@namespace, [], [new(tself, tvalue, thandler)], [], [new(tvalue, thandler, handlerCode)]), member => member.Name).Trim();
 
-    record StructIdCustomModel(string TSelf, string TId, string THandler);
+    record StructIdModel(string TSelf, string TValue);
 
-    record SelectorModel(string Namespace, IEnumerable<StructIdModel> Ids, IEnumerable<StructIdCustomModel> CustomIds, IEnumerable<string> CustomHandlers);
+    record StructIdCustomModel(string TSelf, string TValue, string THandler);
+
+    record ValueHandlerModel(string TValue, string THandler);
+
+    class ValueHandlerModelCode
+    {
+        public ValueHandlerModelCode(TValueTemplate template)
+        {
+            var declaration = template.Template.Syntax.ApplyValue(template.TValue)
+               .DescendantNodes()
+               .OfType<TypeDeclarationSyntax>()
+               .First();
+
+            TValue = template.TValue.ToFullName();
+            THandler = declaration.Identifier.Text;
+            Code = declaration.ToFullString();
+        }
+
+        public ValueHandlerModelCode(string tvalue, string thandler, string code)
+            => (TValue, THandler, Code) = (tvalue, thandler, code);
+
+        public string TValue { get; }
+        public string THandler { get; }
+        public string Code { get; }
+    }
+
+    record SelectorModel(
+        string Namespace,
+        IEnumerable<StructIdModel> Ids,
+        IEnumerable<StructIdCustomModel> CustomIds,
+        IEnumerable<ValueHandlerModel> CustomValues,
+        IEnumerable<ValueHandlerModelCode> TemplatizedValueHandlers);
 }
