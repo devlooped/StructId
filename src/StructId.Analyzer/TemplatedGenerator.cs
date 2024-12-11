@@ -28,7 +28,7 @@ public partial class TemplatedGenerator : IIncrementalGenerator
 
         public SyntaxNode Syntax { get; } = TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot();
 
-        public bool NoString { get; } = new NoStringWalker().Accept(
+        public bool NoString { get; } = new NoStringSyntaxWalker().Accept(
             TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot());
 
         /// <summary>
@@ -45,39 +45,17 @@ public partial class TemplatedGenerator : IIncrementalGenerator
             if (valueType.Is(TId))
                 return true;
 
-            // If the template had a generic attribute, we'd be looking at an intermediate 
-            // type (typically TValue or TId) being used to define multiple constraints on 
-            // the struct id's value type, such as implementing multiple interfaces. In 
-            // this case, the tid would never equal or inherit from the template's TId, 
-            // but we want instead to check for base type compatibility plus all interfaces.
+            // The underlying TId may be an intermediate type (typically TValue or TId)
+            // being used to define multiple constraints on the struct id's value type,
+            // such as implementing multiple interfaces. In this case, the tid would never equal
+            // or inherit from the template's TId, but we want instead to check for base
+            // type compatibility plus all interfaces.
             return IsLocalTId &&
                  // TId is a derived class of the template's TId base type (i.e. object or ValueType)
                  valueType.Is(TId.BaseType) &&
                  // All template provided TId interfaces must be implemented by the struct id's TId
                  TId.AllInterfaces.All(iface =>
                     valueType.AllInterfaces.Any(tface => tface.Is(iface)));
-        }
-
-        class NoStringWalker : CSharpSyntaxWalker
-        {
-            bool nostring;
-
-            public bool Accept(SyntaxNode node)
-            {
-                Visit(node);
-                return nostring;
-            }
-
-            // visit primary constructor and check if there's a trivia with "/*!string*/"
-            public override void VisitRecordDeclaration(RecordDeclarationSyntax node)
-            {
-                if (node.AttributeLists.Any(list => list.Attributes.Any(a => a.IsStructIdTemplate())) &&
-                    node.ParameterList is { } parameters &&
-                    parameters.OpenParenToken.GetAllTrivia().Any(x => x.ToString().Contains("!string")))
-                {
-                    nostring = true;
-                }
-            }
         }
     }
 

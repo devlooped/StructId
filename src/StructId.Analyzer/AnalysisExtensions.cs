@@ -25,6 +25,10 @@ public static class AnalysisExtensions
 
     public static string ToFullName(this ISymbol symbol) => symbol.ToDisplayString(FullNameNullable);
 
+    public static CSharpParseOptions GetParseOptions(this Compilation compilation)
+        => (CSharpParseOptions?)compilation.SyntaxTrees.FirstOrDefault()?.Options ??
+            CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest);
+
     /// <summary>
     /// Checks whether the <paramref name="this"/> type inherits or implements the 
     /// <paramref name="baseTypeOrInterface"/> type, even if it's a generic type.
@@ -151,6 +155,13 @@ public static class AnalysisExtensions
     }
 
     public static bool IsStructId(this ITypeSymbol type) => type.AllInterfaces.Any(x => x.Name == "IStructId");
+
+    public static bool IsValueTemplate(this AttributeData attribute)
+        => attribute.AttributeClass?.Name == "TValue" ||
+           attribute.AttributeClass?.Name == "TValueAttribute";
+
+    public static bool IsValueTemplate(this AttributeSyntax attribute)
+        => attribute.Name.ToString() == "TValue" || attribute.Name.ToString() == "TValueAttribute";
 
     public static bool IsStructIdTemplate(this AttributeData attribute)
         => attribute.AttributeClass?.Name == "TStructId" ||
