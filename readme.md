@@ -260,6 +260,7 @@ file partial record struct TSelf(TValue Value)
     public static explicit operator TSelf(TValue value) => new(value);
 }
 
+// This will be removed when applying the template to each user-defined struct id.
 file record struct TValue;
 ```
 
@@ -294,6 +295,7 @@ file partial record struct TSelf(TValue Value) : IComparable<TSelf>
     public static bool operator >=(TSelf left, TSelf right) => left.Value.CompareTo(right.Value) >= 0;
 }
 
+// This will be removed when applying the template to each user-defined struct id.
 file record struct TValue : IComparable<TValue>
 {
     public int CompareTo(TValue other) => throw new NotImplementedException();

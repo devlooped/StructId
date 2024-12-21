@@ -24,12 +24,14 @@ file readonly partial record struct TSelf(/*!string*/ TValue Value) : ISpanParsa
     }
 }
 
+// This will be removed when applying the template to each user-defined struct id.
 file partial record struct TSelf
 {
     public static TSelf Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
     public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TSelf result) => throw new NotImplementedException();
 }
 
+// This will be removed when applying the template to each user-defined struct id.
 file record struct TValue : ISpanParsable<TValue>
 {
     public static TValue Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => throw new NotImplementedException();

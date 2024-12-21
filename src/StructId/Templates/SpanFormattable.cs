@@ -12,6 +12,7 @@ file partial record struct TSelf(ISpanFormattable Value) : ISpanFormattable
         => ((ISpanFormattable)Value).TryFormat(destination, out charsWritten, format, provider);
 }
 
+// This will be removed when applying the template to each user-defined struct id.
 file partial record struct TSelf
 {
     // This partial is provided by Formattable template

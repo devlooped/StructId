@@ -15,6 +15,7 @@ file class TValue_ValueConverter : ValueConverter<TValue, string>
         : base(id => id.ToString(null, null), value => TValue.Parse(value, null), mappingHints) { }
 }
 
+// This will be removed when applying the template to each user-defined struct id.
 file partial struct TValue : IParsable<TValue>, IFormattable
 {
     public static TValue Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();

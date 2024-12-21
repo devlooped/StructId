@@ -24,6 +24,7 @@ file readonly partial record struct TSelf(/*!string*/ TValue Value) : IParsable<
     }
 }
 
+// This will be removed when applying the template to each user-defined struct id.
 file record struct TValue : IParsable<TValue>
 {
     public static TValue Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
