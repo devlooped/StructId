@@ -43,13 +43,18 @@ public class StringUlidHandler : Dapper.SqlMapper.TypeHandler<Ulid>
 
 // showcases a custom EF value converter trumps the built-in templatized 
 // support for types that provide IParsable<T> and IFormattable
-//public partial class UlidToStringConverter : ValueConverter<Ulid, string>
-//{
-//    public UlidToStringConverter() : this(null) { }
+public partial class UlidToStringConverter : ValueConverter<Ulid, string>
+{
+    public UlidToStringConverter() : this(null) { }
 
-//    public UlidToStringConverter(ConverterMappingHints? mappingHints = null)
-//        : base(id => id.ToString(), value => Ulid.Parse(value), mappingHints) { }
-//}
+    public UlidToStringConverter(ConverterMappingHints? mappingHints = null)
+        : base(id => id.ToString(), value => Ulid.Parse(value), mappingHints) 
+    {
+        Instantiated = true;
+    }
+
+    public static bool Instantiated { get; private set; }
+}
 
 // showcases alternative serialization
 //public class BinaryUlidHandler : TypeHandler<Ulid>
@@ -147,6 +152,8 @@ public class UlidTests
 
         var product3 = context.Products.FirstOrDefault(x => guid == x.Id);
         Assert.Equal(product, product3);
+
+        Assert.True(UlidToStringConverter.Instantiated, "Custom EF converter for Ulid was not used.");
     }
 
     public class UlidContext : DbContext
