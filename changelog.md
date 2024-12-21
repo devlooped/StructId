@@ -39,6 +39,7 @@
 
 :twisted_rightwards_arrows: Merged:
 
+- Document diagnostics and additional features [\#50](https://github.com/devlooped/StructId/pull/50) (@kzu)
 - Add simple dapper+sqlite console app demo [\#48](https://github.com/devlooped/StructId/pull/48) (@kzu)
 - Add sample showcasing no namespace is required for ids [\#47](https://github.com/devlooped/StructId/pull/47) (@kzu)
 - Switch to lighter handler type detection in dapper [\#45](https://github.com/devlooped/StructId/pull/45) (@kzu)
