@@ -40,7 +40,7 @@ public class TemplateCodeFix : CodeFixProvider
 
     public class FixerAction(Document document, SyntaxNode root, TypeDeclarationSyntax original) : CodeAction
     {
-        public override string Title => "Change to file-local partial record struct";
+        public override string Title => "Change to file-local partial record struct TSelf";
         public override string EquivalenceKey => Title;
 
         protected override Task<Document> GetChangedDocumentAsync(CancellationToken cancellationToken)
