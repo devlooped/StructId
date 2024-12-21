@@ -41,13 +41,15 @@ public class StringUlidHandler : Dapper.SqlMapper.TypeHandler<Ulid>
     }
 }
 
-public partial class UlidToStringConverter : ValueConverter<Ulid, string>
-{
-    public UlidToStringConverter() : this(null) { }
+// showcases a custom EF value converter trumps the built-in templatized 
+// support for types that provide IParsable<T> and IFormattable
+//public partial class UlidToStringConverter : ValueConverter<Ulid, string>
+//{
+//    public UlidToStringConverter() : this(null) { }
 
-    public UlidToStringConverter(ConverterMappingHints? mappingHints = null)
-        : base(id => id.ToString(), value => Ulid.Parse(value), mappingHints) { }
-}
+//    public UlidToStringConverter(ConverterMappingHints? mappingHints = null)
+//        : base(id => id.ToString(), value => Ulid.Parse(value), mappingHints) { }
+//}
 
 // showcases alternative serialization
 //public class BinaryUlidHandler : TypeHandler<Ulid>
@@ -126,8 +128,8 @@ public class UlidTests
         var product = new UlidProduct(new UlidId(id), "Product");
 
         // Seed data
-        context.Products.Add(new UlidProduct(UlidId.New(), "Product1"));
         context.Products.Add(product);
+        context.Products.Add(new UlidProduct(UlidId.New(), "Product1"));
         context.Products.Add(new UlidProduct(UlidId.New(), "Product2"));
 
         context.SaveChanges();
@@ -152,12 +154,12 @@ public class UlidTests
         public UlidContext(DbContextOptions<UlidContext> options) : base(options) { }
         public DbSet<UlidProduct> Products { get; set; } = null!;
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<UlidProduct>().Property(x => x.Id)
-                //.HasConversion(new UlidToStringConverter())
-                .HasConversion(new UlidId.EntityFrameworkUlidValueConverter());
-            //.HasConversion(new UlidId.EntityFrameworkValueConverter());
-        }
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    //modelBuilder.Entity<UlidProduct>().Property(x => x.Id)
+        //        //.HasConversion(new UlidToStringConverter())
+        //        //.HasConversion(new UlidId.EntityFrameworkUlidValueConverter());
+        //    //.HasConversion(new UlidId.EntityFrameworkValueConverter());
+        //}
     }
 }

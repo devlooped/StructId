@@ -39,6 +39,7 @@ public static class StructIdDbContextOptionsBuilderExtensions
             modelClrType = Unwrap(modelClrType) ?? modelClrType;
             providerClrType = Unwrap(providerClrType);
 
+            // Struct ID converters
             {{~ for id in Ids ~}}
             if (modelClrType == typeof({{ id.TSelf }}))
                 yield return converters.GetOrAdd((modelClrType, providerClrType), key => new ValueConverterInfo(
@@ -46,10 +47,19 @@ public static class StructIdDbContextOptionsBuilderExtensions
                     info => new {{ id.TSelf }}.EntityFrameworkValueConverter(info.MappingHints)));
 
             {{~ end ~}}
+            // Custom EF converters
             {{~ for converter in Converters ~}}
             if (modelClrType == typeof({{ converter.TModel }}))
                 yield return converters.GetOrAdd((modelClrType, providerClrType), key => new ValueConverterInfo(
                     key.ModelClrType, key.ProviderClrType ?? typeof({{ converter.TProvider }}),
+                    info => new {{ converter.TConverter }}(info.MappingHints)));
+
+            {{~ end ~}}
+            // Templatized converters
+            {{~ for converter in Templatized ~}}
+            if (modelClrType == typeof({{ converter.TModel }}))
+                yield return converters.GetOrAdd((modelClrType, providerClrType), key => new ValueConverterInfo(
+                    key.ModelClrType, key.ProviderClrType ?? typeof(string),
                     info => new {{ converter.TConverter }}(info.MappingHints)));
 
             {{~ end ~}}
@@ -64,3 +74,8 @@ public static class StructIdDbContextOptionsBuilderExtensions
         }
     }
 }
+
+// Templatized converters
+{{~ for converter in Templatized ~}}
+{{ converter.Code }}
+{{~ end ~}}
