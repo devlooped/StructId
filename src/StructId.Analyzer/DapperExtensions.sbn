@@ -43,10 +43,10 @@ public static partial class DapperExtensions
         return connection;
     }
 
-    partial class DapperTypeHandler<TSelf, TId, THandler> : TypeHandler<TSelf>
-        where TSelf : IStructId<TId>, INewable<TSelf, TId>
-        where THandler : TypeHandler<TId>, new()
-        where TId : struct
+    partial class DapperTypeHandler<TSelf, TValue, THandler> : TypeHandler<TSelf>
+        where TSelf : IStructId<TValue>, INewable<TSelf, TValue>
+        where THandler : TypeHandler<TValue>, new()
+        where TValue : struct
     {
         readonly THandler handler = new();
 

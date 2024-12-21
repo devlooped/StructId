@@ -42,14 +42,14 @@ public class TemplateGeneratorTests
                     using StructId;
 
                     [TStructId]
-                    file partial record struct TSelf(TId Value) : IComparable<TSelf>
+                    file partial record struct TSelf(TValue Value) : IComparable<TSelf>
                     {
                         public int CompareTo(TSelf other) => Value.CompareTo(other.Value);
                     }
 
-                    file record struct TId : IComparable<TId>
+                    file record struct TValue : IComparable<TValue>
                     {
-                        public int CompareTo(TId other) => throw new NotImplementedException();
+                        public int CompareTo(TValue other) => throw new NotImplementedException();
                     }
                     """
                 },
@@ -107,15 +107,15 @@ public class TemplateGeneratorTests
                     using StructId;
 
                     [TStructId]
-                    file partial record struct TSelf(TId Value) : IComparable<TSelf>
+                    file partial record struct TSelf(TValue Value) : IComparable<TSelf>
                     {
-                        // By casting to IComparable<TId> we can support explicit interface implementation too
-                        public int CompareTo(TSelf other) => ((IComparable<TId>)Value).CompareTo(other.Value);
+                        // By casting to IComparable<TValue> we can support explicit interface implementation too
+                        public int CompareTo(TSelf other) => ((IComparable<TValue>)Value).CompareTo(other.Value);
                     }
 
-                    file record struct TId : IComparable<TId>
+                    file record struct TValue : IComparable<TValue>
                     {
-                        public int CompareTo(TId other) => throw new NotImplementedException();
+                        public int CompareTo(TValue other) => throw new NotImplementedException();
                     }
                     """
                 },

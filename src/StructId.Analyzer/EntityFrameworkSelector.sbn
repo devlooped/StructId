@@ -43,7 +43,7 @@ public static class StructIdDbContextOptionsBuilderExtensions
             {{~ for id in Ids ~}}
             if (modelClrType == typeof({{ id.TSelf }}))
                 yield return converters.GetOrAdd((modelClrType, providerClrType), key => new ValueConverterInfo(
-                    key.ModelClrType, key.ProviderClrType ?? typeof({{ id.TId }}),
+                    key.ModelClrType, key.ProviderClrType ?? typeof({{ id.TValue }}),
                     info => new {{ id.TSelf }}.EntityFrameworkValueConverter(info.MappingHints)));
 
             {{~ end ~}}

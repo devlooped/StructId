@@ -62,7 +62,7 @@ public class RecordAnalyzer : DiagnosticAnalyzer
             return;
 
         // If there are parameters, it must be only one, be named Value and be either 
-        // type string (if implementing IStructId) or the TId (if implementing IStructId<TId>)
+        // type string (if implementing IStructId) or the TValue (if implementing IStructId<TValue>)
         if (typeDeclaration.ParameterList.Parameters.Count != 1)
         {
             context.ReportDiagnostic(Diagnostic.Create(MustHaveValueConstructor, typeDeclaration.ParameterList.GetLocation(), symbol.Name));

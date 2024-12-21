@@ -22,7 +22,7 @@ public abstract class BaseGenerator(string referenceType, string stringTemplate,
     SyntaxNode? stringSyntax;
     SyntaxNode? typedSyntax;
 
-    protected record struct TemplateArgs(INamedTypeSymbol TSelf, INamedTypeSymbol TId, INamedTypeSymbol ReferenceType, KnownTypes KnownTypes);
+    protected record struct TemplateArgs(INamedTypeSymbol TSelf, INamedTypeSymbol TValue, INamedTypeSymbol ReferenceType, KnownTypes KnownTypes);
 
     public virtual void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -60,7 +60,7 @@ public abstract class BaseGenerator(string referenceType, string stringTemplate,
             });
 
         if (referenceCheck == ReferenceCheck.ValueIsType)
-            combined = combined.Where(x => x.TId.Is(x.ReferenceType));
+            combined = combined.Where(x => x.TValue.Is(x.ReferenceType));
 
         combined = OnInitialize(context, combined);
 
@@ -73,7 +73,7 @@ public abstract class BaseGenerator(string referenceType, string stringTemplate,
         => AddFromTemplate(context, args, $"{args.TSelf.ToFileName()}.cs", SelectTemplate(args));
 
     protected virtual SyntaxNode SelectTemplate(TemplateArgs args)
-        => args.TId.Equals(args.KnownTypes.String, SymbolEqualityComparer.Default) ?
+        => args.TValue.Equals(args.KnownTypes.String, SymbolEqualityComparer.Default) ?
             (stringSyntax ??= CodeTemplate.Parse(stringTemplate, args.KnownTypes.Compilation.GetParseOptions())) :
             (typedSyntax ??= CodeTemplate.Parse(typeTemplate, args.KnownTypes.Compilation.GetParseOptions()));
 

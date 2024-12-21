@@ -5,11 +5,11 @@ namespace StructId;
 /// <summary>
 /// Interface for struct-based identifiers.
 /// </summary>
-/// <typeparam name="TId">The struct type for the inner <see cref="Value"/> of the identifier.</typeparam>
-public partial interface IStructId<TId> where TId : struct
+/// <typeparam name="TValue">The struct type for the inner <see cref="Value"/> of the identifier.</typeparam>
+public partial interface IStructId<TValue> where TValue : struct
 {
     /// <summary>
     /// Gets the underlying value of the identifier.
     /// </summary>
-    TId Value { get; }
+    TValue Value { get; }
 }

@@ -53,14 +53,14 @@ record TValueTemplateInfo(INamedTypeSymbol TTemplate, KnownTypes KnownTypes)
             return true;
 
         // If the template had a generic attribute, we'd be looking at an intermediate 
-        // type (typically TValue or TId) being used to define multiple constraints on 
+        // type (typically TValue) being used to define multiple constraints on 
         // the struct id's value type, such as implementing multiple interfaces. In 
-        // this case, the tid would never equal or inherit from the template's TId, 
+        // this case, the tid would never equal or inherit from the template's TValue, 
         // but we want instead to check for base type compatibility plus all interfaces.
         return TValue.IsFileLocal &&
-             // TId is a derived class of the template's TId base type (i.e. object or ValueType)
+             // TValue is a derived class of the template's TValue base type (i.e. object or ValueType)
              valueType.Is(TValue.BaseType) &&
-             // All template provided TId interfaces must be implemented by the struct id's TId
+             // All template provided TValue interfaces must be implemented by the struct id's TValue
              TValue.AllInterfaces.All(iface =>
                 valueType.AllInterfaces.Any(tface => tface.Is(iface)));
     }
@@ -99,7 +99,7 @@ static class TValueTemplateExtensions
             .SelectMany((x, _) =>
             {
                 var ((id, known), templates) = x;
-                // Locate the IStructId<TId> interface implemented by the id
+                // Locate the IStructId<TValue> interface implemented by the id
                 var structId = id.AllInterfaces.First(i => i.Is(known.IStructIdT));
                 var tvalue = (INamedTypeSymbol)structId.TypeArguments[0];
                 return templates
@@ -113,9 +113,9 @@ static class TValueTemplateExtensions
     //void GenerateCode(SourceProductionContext context, TIdTemplate source)
     //{
     //    var templateFile = Path.GetFileNameWithoutExtension(source.Template.Syntax.SyntaxTree.FilePath);
-    //    var hintName = $"{source.TId.ToFileName()}/{templateFile}.cs";
+    //    var hintName = $"{source.TValue.ToFileName()}/{templateFile}.cs";
 
-    //    var applied = source.Template.Syntax.Apply(source.TId);
+    //    var applied = source.Template.Syntax.Apply(source.TValue);
     //    var output = applied.ToFullString();
 
     //    context.AddSource(hintName, SourceText.From(output, Encoding.UTF8));

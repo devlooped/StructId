@@ -71,11 +71,11 @@ public class EntityFrameworkGenerator() : BaseGenerator(
 
     protected override SyntaxNode SelectTemplate(TemplateArgs args)
     {
-        if (args.TId.Equals(args.KnownTypes.String, SymbolEqualityComparer.Default) ||
-            builtInTypesMap.ContainsKey(args.TId.ToDisplayString(NamespacedTypeName)))
+        if (args.TValue.Equals(args.KnownTypes.String, SymbolEqualityComparer.Default) ||
+            builtInTypesMap.ContainsKey(args.TValue.ToDisplayString(NamespacedTypeName)))
             return idTemplate ??= CodeTemplate.Parse(ThisAssembly.Resources.Templates.EntityFramework.Text, args.KnownTypes.Compilation.GetParseOptions());
-        else if (args.TId.Is(args.KnownTypes.Compilation.GetTypeByMetadataName("System.IParsable`1")) &&
-                 args.TId.Is(args.KnownTypes.Compilation.GetTypeByMetadataName("System.IFormattable")))
+        else if (args.TValue.Is(args.KnownTypes.Compilation.GetTypeByMetadataName("System.IParsable`1")) &&
+                 args.TValue.Is(args.KnownTypes.Compilation.GetTypeByMetadataName("System.IFormattable")))
             return parsableIdTemplate ??= CodeTemplate.Parse(ThisAssembly.Resources.Templates.EntityFrameworkParsable.Text, args.KnownTypes.Compilation.GetParseOptions());
         else
             return idTemplate ??= CodeTemplate.Parse(ThisAssembly.Resources.Templates.EntityFramework.Text, args.KnownTypes.Compilation.GetParseOptions());
@@ -90,16 +90,16 @@ public class EntityFrameworkGenerator() : BaseGenerator(
 
         var model = new SelectorModel(
             structIds.Select(x => new StructIdModel(x.TSelf.ToFullName(),
-                // The TId is used as the ProviderClrType for EF, which should be either a built-in 
+                // The TValue is used as the ProviderClrType for EF, which should be either a built-in 
                 // supported type or a parsable one. We default to using the type as-is for future-proofing, 
                 // but that may be subject to change.
-                !builtInTypesMap.ContainsKey(x.TId.ToDisplayString(NamespacedTypeName))
-                ? x.TId.Is(x.KnownTypes.Compilation.GetTypeByMetadataName("System.IParsable`1")) &&
-                  x.TId.Is(x.KnownTypes.Compilation.GetTypeByMetadataName("System.IFormattable"))
+                !builtInTypesMap.ContainsKey(x.TValue.ToDisplayString(NamespacedTypeName))
+                ? x.TValue.Is(x.KnownTypes.Compilation.GetTypeByMetadataName("System.IParsable`1")) &&
+                  x.TValue.Is(x.KnownTypes.Compilation.GetTypeByMetadataName("System.IFormattable"))
                   // parsable+formattable will result in the parsable template being used as the converter
                   // so we use string as the underlying EF type.
-                  ? "string" : x.TId.ToFullName()
-                : x.TId.ToFullName())),
+                  ? "string" : x.TValue.ToFullName()
+                : x.TValue.ToFullName())),
             customConverters.Select(x => new ConverterModel(x.BaseType!.TypeArguments[0].ToFullName(), x.BaseType!.TypeArguments[1].ToFullName(), x.ToFullName())),
             templatizedConverters
                 .Where(x => !builtInTypesMap.ContainsKey(x.TValue.ToDisplayString(NamespacedTypeName)))
@@ -110,9 +110,9 @@ public class EntityFrameworkGenerator() : BaseGenerator(
         context.AddSource($"ValueConverterSelector.cs", output);
     }
 
-    record StructIdModel(string TSelf, string TIdType)
+    record StructIdModel(string TSelf, string TValueType)
     {
-        public string TId => builtInTypesMap.TryGetValue(TIdType, out var value) ? value : TIdType;
+        public string TValue => builtInTypesMap.TryGetValue(TValueType, out var value) ? value : TValueType;
     }
 
     record ConverterModel(string TModel, string TProvider, string TConverter);

@@ -5,10 +5,10 @@ using System;
 using StructId;
 
 [TStructId]
-file partial record struct TSelf(TId Value) : IComparable<TSelf>
+file partial record struct TSelf(TValue Value) : IComparable<TSelf>
 {
     /// <inheritdoc/>
-    public int CompareTo(TSelf other) => ((IComparable<TId>)Value).CompareTo(other.Value);
+    public int CompareTo(TSelf other) => ((IComparable<TValue>)Value).CompareTo(other.Value);
 
     /// <inheritdoc/>
     public static bool operator <(TSelf left, TSelf right) => left.Value.CompareTo(right.Value) < 0;
@@ -23,7 +23,7 @@ file partial record struct TSelf(TId Value) : IComparable<TSelf>
     public static bool operator >=(TSelf left, TSelf right) => left.Value.CompareTo(right.Value) >= 0;
 }
 
-file record struct TId : IComparable<TId>
+file record struct TValue : IComparable<TValue>
 {
-    public int CompareTo(TId other) => throw new NotImplementedException();
+    public int CompareTo(TValue other) => throw new NotImplementedException();
 }

@@ -3,10 +3,10 @@
 using StructId;
 
 [TStructId]
-file partial record struct TSelf(TId Value)
+file partial record struct TSelf(TValue Value)
 {
-    public static implicit operator TId(TSelf id) => id.Value;
-    public static explicit operator TSelf(TId value) => new(value);
+    public static implicit operator TValue(TSelf id) => id.Value;
+    public static explicit operator TSelf(TValue value) => new(value);
 }
 
-file record struct TId;
+file record struct TValue;
