@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Dapper;
 using Microsoft.Data.Sqlite;
@@ -10,8 +11,8 @@ using Newtonsoft.Json.Linq;
 
 namespace StructId.Functional;
 
-// Showcases providing your own ctor
-public readonly partial record struct ProductId(Guid Value) : IStructId<Guid>;
+// Showcases providing your own ctor for additional annotations or attributes
+public readonly partial record struct ProductId([property: Browsable(false)] Guid Value) : IStructId<Guid>;
 
 public readonly partial record struct UserId : IStructId<long>;
 // Showcases string-based id

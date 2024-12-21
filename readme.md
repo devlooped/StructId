@@ -206,6 +206,20 @@ file partial record struct TSelf(Guid Value) : IId
 }
 ```
 
+Another example of a built-in template that applies to a single type of `TValue` is 
+the following:
+
+```csharp
+using StructId;
+
+[TStructId]
+file partial record struct TSelf(string Value)
+{
+    public static implicit operator string(TSelf id) => id.Value;
+    public static explicit operator TSelf(string value) => new(value);
+}
+```
+
 This template is a proper C# compilation unit, so you can use any C# feature that 
 your project supports, since its output will also be emitted via a source generator 
 in the same project for matching struct ids.
@@ -228,10 +242,101 @@ partial record struct PersonId : IId
 
 Things to note at template expansion time:
 1. The `[TStructId]` attribute is removed from the generated type automatically.
-1. The `TSelf` type is replaced with the actual name of the struct id.
-1. The primary constructor on the template is removed since it is already provided 
-   by anoother generator.
+2. The `TSelf` type is replaced with the actual name of the struct id.
+3. The primary constructor on the template is removed since it is already provided 
+   by another generator.
 
+You can also constrain the type of `TValue` the template applies to by using using 
+the special name `TValue` for the primary constructor parameter type, as in the following 
+example from the implicit conversion template:
+
+```csharp
+using StructId;
+
+[TStructId]
+file partial record struct TSelf(TValue Value)
+{
+    public static implicit operator TValue(TSelf id) => id.Value;
+    public static explicit operator TSelf(TValue value) => new(value);
+}
+
+file record struct TValue;
+```
+
+The `TValue` is subsequently defined as a file-local type where you can 
+specify whether it's a struct or a class and any interfaces it implements. 
+These are used to constrain the template expansion to only apply to struct ids, 
+such as those whose `TValue` is a struct above.
+
+Here's another example from the built-in templates that uses this technique to
+apply to all struct ids whose `TValue` implements `IComparable<TValue>`:
+
+```csharp
+using System;
+using StructId;
+
+[TStructId]
+file partial record struct TSelf(TValue Value) : IComparable<TSelf>
+{
+    /// <inheritdoc/>
+    public int CompareTo(TSelf other) => ((IComparable<TValue>)Value).CompareTo(other.Value);
+
+    /// <inheritdoc/>
+    public static bool operator <(TSelf left, TSelf right) => left.Value.CompareTo(right.Value) < 0;
+
+    /// <inheritdoc/>
+    public static bool operator <=(TSelf left, TSelf right) => left.Value.CompareTo(right.Value) <= 0;
+
+    /// <inheritdoc/>
+    public static bool operator >(TSelf left, TSelf right) => left.Value.CompareTo(right.Value) > 0;
+
+    /// <inheritdoc/>
+    public static bool operator >=(TSelf left, TSelf right) => left.Value.CompareTo(right.Value) >= 0;
+}
+
+file record struct TValue : IComparable<TValue>
+{
+    public int CompareTo(TValue other) => throw new NotImplementedException();
+}
+```
+
+This automatically covers not only all built-in value types, but also any custom 
+types that implement the interface, making the code generation much more flexible 
+and powerful.
+
+In addition to constraining on the `TValue` type, you can also constrain on the
+the struct id/`TSelf` itself by declaring the inheritance requirements in a partial 
+class of `TSelf` in the template. For example, the following (built-in) template 
+ensures it's only applied/expanded for struct ids whose `TValue` is [Ulid](https://github.com/Cysharp/Ulid) 
+and implement `INewable<TSelf, Ulid>`. Its usefulness in this case is that 
+the given interface constraint allows us to use the `TSelf.New(Ulid)` static interface 
+factory method and have it recognized by the C# compiler as valid code as part of the 
+implementation of the parameterless `New()` factory method:
+
+```csharp
+[TStructId]
+file partial record struct TSelf(Ulid Value)
+{
+    public static TSelf New() => new(Ulid.NewUlid());
+}
+
+// This will be removed when applying the template to each user-defined struct id.
+file partial record struct TSelf : INewable<TSelf, Ulid>
+{
+    public static TSelf New(Ulid value) => throw new NotImplementedException();
+}
+```
+
+> NOTE: the built-in templates will always provide an implementation of 
+> `INewable<TSelf, TValue>`.
+ 
+Here you can see that the constraint that the value type must be `Ulid` is enforced by 
+the `TValue` constructor parameter type, while the interface constraint in the partial 
+declaration enforces inheritance from `INewable<TSelf, Ulid>`. Since this part of 
+the partial declaration is removed, there is no need to provide an actual implementation 
+for the constrain interface(s), just the signature is enough. But the partial declaration
+providing the interface constraint is necessary for the C# compiler to recognize the 
+line with `public static TSelf New() => new(Ulid.NewUlid());` as valid.
 
 <!-- #content -->
 <!-- #ci -->
