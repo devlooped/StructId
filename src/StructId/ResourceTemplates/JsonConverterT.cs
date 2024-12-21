@@ -7,20 +7,20 @@ using System.Text.Json.Serialization;
 using StructId;
 
 [TStructId]
-[JsonConverter(typeof(StructIdConverters.SystemTextJsonConverter<TSelf, TId>))]
+[JsonConverter(typeof(StructIdConverters.SystemTextJsonConverter<TSelf, TValue>))]
 file partial record struct TSelf
 {
 }
 
-file partial record struct TSelf : IStructId<TId>, INewable<TSelf, TId>
+file partial record struct TSelf : IStructId<TValue>, INewable<TSelf, TValue>
 {
-    public TId Value => throw new NotImplementedException();
+    public TValue Value => throw new NotImplementedException();
 
-    public static TSelf New(TId value) => throw new NotImplementedException();
+    public static TSelf New(TValue value) => throw new NotImplementedException();
 }
 
-file record struct TId : IParsable<TId>
+file record struct TValue : IParsable<TValue>
 {
-    public static TId Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TId result) => throw new NotImplementedException();
+    public static TValue Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TValue result) => throw new NotImplementedException();
 }

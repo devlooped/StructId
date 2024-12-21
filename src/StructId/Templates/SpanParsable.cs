@@ -6,15 +6,15 @@ using System;
 using StructId;
 
 [TStructId]
-file readonly partial record struct TSelf(/*!string*/ TId Value) : ISpanParsable<TSelf>
+file readonly partial record struct TSelf(/*!string*/ TValue Value) : ISpanParsable<TSelf>
 {
     /// <inheritdoc cref="ISpanParsable{TSelf}"/>
-    public static TSelf Parse(ReadOnlySpan<char> input, IFormatProvider? provider) => new(TId.Parse(input, provider));
+    public static TSelf Parse(ReadOnlySpan<char> input, IFormatProvider? provider) => new(TValue.Parse(input, provider));
 
     /// <inheritdoc cref="ISpanParsable{TSelf}"/>
     public static bool TryParse(ReadOnlySpan<char> input, IFormatProvider? provider, out TSelf result)
     {
-        if (TId.TryParse(input, provider, out var value))
+        if (TValue.TryParse(input, provider, out var value))
         {
             result = new TSelf(value);
             return true;
@@ -30,10 +30,10 @@ file partial record struct TSelf
     public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TSelf result) => throw new NotImplementedException();
 }
 
-file record struct TId : ISpanParsable<TId>
+file record struct TValue : ISpanParsable<TValue>
 {
-    public static TId Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => throw new NotImplementedException();
-    public static TId Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
-    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out TId result) => throw new NotImplementedException();
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TId result) => throw new NotImplementedException();
+    public static TValue Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => throw new NotImplementedException();
+    public static TValue Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out TValue result) => throw new NotImplementedException();
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TValue result) => throw new NotImplementedException();
 }

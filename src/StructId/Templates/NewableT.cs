@@ -3,10 +3,10 @@
 using StructId;
 
 [TStructId]
-file partial record struct TSelf(TId Value) : INewable<TSelf, TId>
+file partial record struct TSelf(TValue Value) : INewable<TSelf, TValue>
 {
     /// <inheritdoc/>
-    public static TSelf New(TId value) => new(value);
+    public static TSelf New(TValue value) => new(value);
 }
 
-file record struct TId;
+file record struct TValue;

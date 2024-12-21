@@ -35,7 +35,7 @@ public class CodeTemplateTests(ITestOutputHelper output)
                 // from template
             }
 
-            file record struct TId;
+            file record struct TValue;
             """;
 
         var id = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(

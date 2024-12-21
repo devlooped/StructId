@@ -9,12 +9,12 @@ namespace StructId;
 
 public static partial class StructIdConverters
 {
-    public class SystemTextJsonConverter<TSelf, TId> : JsonConverter<TSelf>
-        where TSelf : IStructId<TId>, INewable<TSelf, TId>
-        where TId: struct, IParsable<TId>
+    public class SystemTextJsonConverter<TSelf, TValue> : JsonConverter<TSelf>
+        where TSelf : IStructId<TValue>, INewable<TSelf, TValue>
+        where TValue: struct, IParsable<TValue>
     {
         public override TSelf Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            => TSelf.New(TId.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
+            => TSelf.New(TValue.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
 
         public override void Write(Utf8JsonWriter writer, TSelf value, JsonSerializerOptions options)
         {
@@ -23,7 +23,7 @@ public static partial class StructIdConverters
                 case Guid guid:
                     writer.WriteStringValue(guid);
                     break;
-                case TId inner:
+                case TValue inner:
                     writer.WriteRawValue(inner.ToString());
                     break;
                 default:
@@ -32,7 +32,7 @@ public static partial class StructIdConverters
         }
 
         public override TSelf ReadAsPropertyName(ref global::System.Text.Json.Utf8JsonReader reader, global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options)
-            => TSelf.New(TId.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
+            => TSelf.New(TValue.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
 
         public override void WriteAsPropertyName(global::System.Text.Json.Utf8JsonWriter writer, TSelf value, global::System.Text.Json.JsonSerializerOptions options)
             => writer.WritePropertyName(value.Value.ToString());

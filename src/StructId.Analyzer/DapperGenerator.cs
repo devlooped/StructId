@@ -28,7 +28,7 @@ public class DapperGenerator() : BaseGenerator(
             _ => false
         };
 
-        var builtInHandled = source.Where(x => IsBuiltIn(x.TId.ToFullName()));
+        var builtInHandled = source.Where(x => IsBuiltIn(x.TValue.ToFullName()));
 
         var customHandlers = context.CompilationProvider
             .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
@@ -52,12 +52,12 @@ public class DapperGenerator() : BaseGenerator(
             {
                 (TemplateArgs args, (ImmutableArray<INamedTypeSymbol> handlers, ImmutableArray<TValueTemplate> templatized)) = x;
 
-                var handlerType = args.ReferenceType.Construct(args.TId);
+                var handlerType = args.ReferenceType.Construct(args.TValue);
                 var handler = handlers.FirstOrDefault(x => x.Is(handlerType, false));
 
                 if (handler == null)
                 {
-                    var templated = templatized.Where(x => x.TValue.Equals(args.TId, SymbolEqualityComparer.Default))
+                    var templated = templatized.Where(x => x.TValue.Equals(args.TValue, SymbolEqualityComparer.Default))
                         .FirstOrDefault();
                     // Consider templatized handlers that will be emitted as custom handlers too for registration.
                     if (templated != null)
@@ -94,14 +94,14 @@ public class DapperGenerator() : BaseGenerator(
             // Avoid registering twice the same templatized value handlers since they are 
             // already added at the end of the scriban rendering.
             .Where(x => !templatizedHandlers.Contains(x.Key))
-            .Select(x => new ValueHandlerModel(x.First().TId.ToFullName(), x.Key))
+            .Select(x => new ValueHandlerModel(x.First().TValue.ToFullName(), x.Key))
             .ToArray();
 
         var model = new SelectorModel(
             structIdNamespace,
             // Built-in use the Name of the value type since it's used as a suffix for well-known provided implementations.
-            builtInHandled.Select(x => new StructIdModel(x.TSelf.ToFullName(), x.TId.Name)),
-            customHandled.Select(x => new StructIdCustomModel(x.TSelf.ToFullName(), x.TId.ToFullName(), x.ReferenceType.ToFullName())),
+            builtInHandled.Select(x => new StructIdModel(x.TSelf.ToFullName(), x.TValue.Name)),
+            customHandled.Select(x => new StructIdCustomModel(x.TSelf.ToFullName(), x.TValue.ToFullName(), x.ReferenceType.ToFullName())),
             customValueHandlers,
             templatizedValues.Select(x => new ValueHandlerModelCode(x)));
 

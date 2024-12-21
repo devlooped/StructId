@@ -1,6 +1,6 @@
 ﻿using StructId;
 
 [TStructId]
-file readonly partial record struct TSelf(/*🙏*/ TId Value);
+file readonly partial record struct TSelf(/*🙏*/ TValue Value);
 
-file record struct TId;
+file record struct TValue;

@@ -15,16 +15,16 @@ public partial class TemplatedGenerator : IIncrementalGenerator
     /// Represents a template for struct ids.
     /// </summary>
     /// <param name="StructId">The struct id type, either IStructId or IStructId{T}.</param>
-    /// <param name="TId">The type of value the struct id holds, such as Guid or string.</param>
+    /// <param name="TValue">The type of value the struct id holds, such as Guid or string.</param>
     /// <param name="Template">The template to apply to it.</param>
-    record IdTemplate(INamedTypeSymbol StructId, INamedTypeSymbol TId, Template Template);
+    record IdTemplate(INamedTypeSymbol StructId, INamedTypeSymbol TValue, Template Template);
 
-    record Template(INamedTypeSymbol TSelf, INamedTypeSymbol TId, AttributeData Attribute, KnownTypes KnownTypes)
+    record Template(INamedTypeSymbol TSelf, INamedTypeSymbol TValue, AttributeData Attribute, KnownTypes KnownTypes)
     {
-        public INamedTypeSymbol? OriginalTId { get; init; }
+        public INamedTypeSymbol? OriginalTValue { get; init; }
 
-        // A custom TId is a file-local type declaration.
-        public bool IsLocalTId => OriginalTId?.IsFileLocal == true;
+        // A custom TValue is a file-local type declaration.
+        public bool IsLocalTValue => OriginalTValue?.IsFileLocal == true;
 
         public SyntaxNode Syntax { get; } = TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot();
 
@@ -32,29 +32,29 @@ public partial class TemplatedGenerator : IIncrementalGenerator
             TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot());
 
         /// <summary>
-        /// Checks the value type against the template's TId for compatibility
+        /// Checks the value type against the template's TValue for compatibility
         /// </summary>
         public bool AppliesTo(INamedTypeSymbol valueType)
         {
             if (NoString && valueType.Equals(KnownTypes.String, SymbolEqualityComparer.Default))
                 return false;
 
-            if (valueType.Equals(TId, SymbolEqualityComparer.Default))
+            if (valueType.Equals(TValue, SymbolEqualityComparer.Default))
                 return true;
 
-            if (valueType.Is(TId))
+            if (valueType.Is(TValue))
                 return true;
 
-            // The underlying TId may be an intermediate type (typically TValue or TId)
+            // The underlying TValue may be an intermediate type (typically TValue or TValue)
             // being used to define multiple constraints on the struct id's value type,
             // such as implementing multiple interfaces. In this case, the tid would never equal
-            // or inherit from the template's TId, but we want instead to check for base
+            // or inherit from the template's TValue, but we want instead to check for base
             // type compatibility plus all interfaces.
-            return IsLocalTId &&
-                 // TId is a derived class of the template's TId base type (i.e. object or ValueType)
-                 valueType.Is(TId.BaseType) &&
-                 // All template provided TId interfaces must be implemented by the struct id's TId
-                 TId.AllInterfaces.All(iface =>
+            return IsLocalTValue &&
+                 // TValue is a derived class of the template's TValue base type (i.e. object or ValueType)
+                 valueType.Is(TValue.BaseType) &&
+                 // All template provided TValue interfaces must be implemented by the struct id's TValue
+                 TValue.AllInterfaces.All(iface =>
                     valueType.AllInterfaces.Any(tface => tface.Is(iface)));
         }
     }
@@ -93,7 +93,7 @@ public partial class TemplatedGenerator : IIncrementalGenerator
                 var type = idType.DeclaringSyntaxReferences[0].GetSyntax(cancellation) as TypeDeclarationSyntax;
                 var iface = type?.BaseList?.Types.FirstOrDefault()?.Type;
                 if (type == null || iface == null)
-                    return new Template(structId, idType, attribute, known) { OriginalTId = idType };
+                    return new Template(structId, idType, attribute, known) { OriginalTValue = idType };
 
                 if (x.Right.Compilation.GetSemanticModel(type.SyntaxTree).GetSymbolInfo(iface).Symbol is not INamedTypeSymbol ifaceType)
                     return new Template(structId, idType, attribute, known);
@@ -105,7 +105,7 @@ public partial class TemplatedGenerator : IIncrementalGenerator
 
                 return new Template(structId, ifaceType, attribute, known)
                 {
-                    OriginalTId = idType
+                    OriginalTValue = idType
                 };
             })
             .Collect();
@@ -125,10 +125,10 @@ public partial class TemplatedGenerator : IIncrementalGenerator
             .SelectMany((x, _) =>
             {
                 var ((id, known), templates) = x;
-                // Locate the IStructId<TId> interface implemented by the id
+                // Locate the IStructId<TValue> interface implemented by the id
                 var structId = id.AllInterfaces.First(i => i.Is(known.IStructId) || i.Is(known.IStructIdT));
                 var tid = structId.IsGenericType ? (INamedTypeSymbol)structId.TypeArguments[0] : known.String;
-                // If the TId/Value implements or inherits from the template base type and/or its interfaces
+                // If the TValue/Value implements or inherits from the template base type and/or its interfaces
                 return templates
                     .Where(template => template.AppliesTo(tid))
                     .Select(template => new IdTemplate(id, tid, template));
