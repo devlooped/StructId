@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
 namespace StructId;
@@ -70,11 +69,13 @@ public abstract class BaseGenerator(string referenceType, string stringTemplate,
 
     protected virtual IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source) => source;
 
-    void GenerateCode(SourceProductionContext context, TemplateArgs args) => AddFromTemplate(
-        context, args, $"{args.TSelf.ToFileName()}.cs",
-        args.TId.Equals(args.KnownTypes.String, SymbolEqualityComparer.Default) ?
+    void GenerateCode(SourceProductionContext context, TemplateArgs args)
+        => AddFromTemplate(context, args, $"{args.TSelf.ToFileName()}.cs", SelectTemplate(args));
+
+    protected virtual SyntaxNode SelectTemplate(TemplateArgs args)
+        => args.TId.Equals(args.KnownTypes.String, SymbolEqualityComparer.Default) ?
             (stringSyntax ??= CodeTemplate.Parse(stringTemplate, args.KnownTypes.Compilation.GetParseOptions())) :
-            (typedSyntax ??= CodeTemplate.Parse(typeTemplate, args.KnownTypes.Compilation.GetParseOptions())));
+            (typedSyntax ??= CodeTemplate.Parse(typeTemplate, args.KnownTypes.Compilation.GetParseOptions()));
 
     protected static void AddFromTemplate(SourceProductionContext context, TemplateArgs args, string hintName, SyntaxNode template)
     {

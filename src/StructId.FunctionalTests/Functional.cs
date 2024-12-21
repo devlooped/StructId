@@ -91,8 +91,8 @@ public class FunctionalTests(ITestOutputHelper output)
         var product = new Product(new ProductId(id), "Product");
 
         // Seed data
-        context.Products.Add(new Product(ProductId.New(), "Product1"));
         context.Products.Add(product);
+        context.Products.Add(new Product(ProductId.New(), "Product1"));
         context.Products.Add(new Product(ProductId.New(), "Product2"));
 
         context.SaveChanges();
