@@ -23,10 +23,10 @@ Unlike other such libraries for .NET, StructId introduces several unique feature
    code will be emitted without any additional configuration for the generation itself.
 1. Leverages newest language and runtime features for cleaner and more efficient code, 
    such as:
-   1. `IParsable<T>`/`ISpanParsable<T>` for parsing from strings.
-   1. Static interface members, for consistent `TSelf.New(TValue value)` factory 
+   * `IParsable<T>`/`ISpanParsable<T>` for parsing from strings.
+   * Static interface members, for consistent `TSelf.New(TValue value)` factory 
       method and proper type constraint (via a provided `INewable<TSelf, TValue>` interface).
-   1. File-scoped C# templates for unparalelled authoring and extensibility experience.
+   * File-scoped compiled C# templates for unparalleled authoring and extensibility experience.
 
 ## Usage
 
