@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using StructId.Functional;
+using StructId;
 
 [TStructId]
 file partial record struct TSelf(Ulid Value)

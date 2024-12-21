@@ -44,7 +44,23 @@
     <WriteRaw Content="%(StructId.Content)" SourcePath="%(StructId.FullPath)" TargetPath="%(StructId.TargetPath)" />
   </Target>
 
-  <Target Name="AddStructId" DependsOnTargets="IncludeStructIdAsIs;CopyStructIdNamespaced" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+  <Target Name="AddStructId" DependsOnTargets="IncludeStructIdAsIs;CopyStructIdNamespaced;ResolveLockFileReferences" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+    <!-- Feature detection -->
+    <PropertyGroup>
+      <UseDapper>false</UseDapper>
+      <UseDapper Condition="'@(Reference -> WithMetadataValue('NuGetPackageId', 'Dapper'))' != ''">true</UseDapper>
+      <UseEntityFramework>false</UseEntityFramework>
+      <UseEntityFramework Condition="'@(Reference -> WithMetadataValue('NuGetPackageId', 'Microsoft.EntityFrameworkCore'))' != ''">true</UseEntityFramework>
+      <UseUlid>false</UseUlid>
+      <UseUlid Condition="'@(Reference -> WithMetadataValue('NuGetPackageId', 'Ulid'))' != ''">true</UseUlid>
+    </PropertyGroup>
+    <ItemGroup>
+      <FeatureTemplatesToRemove Include="@(StructId -> WithMetadataValue('Filename', 'DapperTypeHandler'))" Condition="!$(UseDapper)" />
+      <FeatureTemplatesToRemove Include="@(StructId -> WithMetadataValue('Filename', 'EntityFrameworkValueConverter'))" Condition="!$(UseEntityFramework)" />
+      <FeatureTemplatesToRemove Include="@(StructId -> WithMetadataValue('Filename', 'NewableUlid'))" Condition="!$(UseUlid)" />
+      <StructId Remove="@(FeatureTemplatesToRemove)" />
+    </ItemGroup>
+    <!-- Add final template items to project -->
     <ItemGroup>
       <Compile Include="%(StructId.TargetPath)" />
     </ItemGroup>
