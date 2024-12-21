@@ -233,39 +233,6 @@ Things to note at template expansion time:
    by anoother generator.
 
 
-You can also customize code generation for the `TValue`s used in your struct ids. 
-For example, the support for automatically registering a generic `Dapper.SqlMapper.TypeHandler<T>` 
-when a `TValue` implements both `IParsable<T>` and `IFormattable` is implemented as a 
-so-called `TValue` template:
-
-```csharp
-[TValue]
-file class TValue_TypeHandler : Dapper.SqlMapper.TypeHandler<TValue>
-{
-    public override TValue Parse(object value) => TValue.Parse((string)value, null);
-
-    public override void SetValue(IDbDataParameter parameter, TValue value)
-    {
-        parameter.DbType = DbType.String;
-        parameter.Value = value.ToString(null, null);
-    }
-}
-
-file partial struct TValue : IParsable<TValue>, IFormattable
-{
-    public static TValue Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TValue result) => throw new NotImplementedException();
-    public string ToString(string? format, IFormatProvider? formatProvider) => throw new NotImplementedException();
-}
-```
-
-If you use use [Ulid](https://github.com/Cysharp/Ulid) as a value type in your struct ids, 
-for example, the template will be applied since `Ulid` implements both `IParsable<T>` and 
-`IFormattable`. The generated code will look like this:
-
-```csharp
-
-
 <!-- #content -->
 <!-- #ci -->
 
