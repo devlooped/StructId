@@ -3,6 +3,7 @@ using System.Data;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace StructId.Functional;
 
@@ -41,7 +42,7 @@ public partial class UlidToStringConverter : ValueConverter<Ulid, string>
     public UlidToStringConverter() : this(null) { }
 
     public UlidToStringConverter(ConverterMappingHints? mappingHints = null)
-        : base(id => id.ToString(), value => Ulid.Parse(value), mappingHints) 
+        : base(id => id.ToString(), value => Ulid.Parse(value), mappingHints)
     {
         Instantiated = true;
     }
