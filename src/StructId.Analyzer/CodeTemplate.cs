@@ -12,8 +12,7 @@ public static class CodeTemplate
 {
     public static SyntaxNode Parse(string template, CSharpParseOptions? parseOptions = default)
     {
-        var tree = CSharpSyntaxTree.ParseText(template,
-            parseOptions ?? CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest));
+        var tree = CSharpSyntaxTree.ParseText(template, parseOptions ?? CSharpParseOptions.Default);
 
         return tree.GetRoot();
     }
