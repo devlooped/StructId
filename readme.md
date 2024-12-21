@@ -88,6 +88,14 @@ Alternatively, you can also invoke that method in the `OnConfiguring` method of 
 protected override void OnConfiguring(DbContextOptionsBuilder builder) => builder.UseStructId();
 ```
 
+In addition to the natively supported primitive types, any other types that implement `IParsable<T>` 
+and `IFormattable` get automatic support by persisting as strings. This means that you can, 
+for example, use [Ulid](https://github.com/Cysharp/Ulid) out of the box without any further 
+configuration or customization (since it implements both interfaces).
+
+Additionally, the `UseStructId` will pick up any custom [ValueConverter<TModel,TProvider>](https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.storage.valueconversion.valueconverter-2?view=efcore-9.0) 
+you may add to your project and register them too for convenience.
+
 ## Dapper
 
 If you are using Dapper, the package will automatically generate required `SqlMapper.TypeHandler<T>` 
@@ -106,6 +114,29 @@ any other types that implement `IParsable<T>` and `IFormattable` (by persisting 
 as strings). This means that you can, for example, use [Ulid](https://github.com/Cysharp/Ulid) 
 out of the box without any further configuration or customization (since it implements 
 both interfaces).
+
+Additionally, the `UseStructId` will pick up any custom `Dapper.SqlMapper.TypeHandler<T>`
+you may add to your project and register them too for convenience.
+
+## Ulid
+
+Since [Ulid](https://github.com/Cysharp/Ulid) implements `IParsable<T>` and `IFormattable`,
+it is supported out of the box without any further configuration or customization with both 
+Dapper and EF Core.
+
+In addition to the necessary converter/handler registration, the package will also generate 
+a `New()` (parameterless) factory method for struct ids using `Ulid` as the value type, which 
+in turn will use `Ulid.NewUlid()` to generate a new value. This mirrors the behavior 
+generated for `Guid`-based struct ids.
+
+```csharp
+public readonly partial record struct ProductId : IStructId<Ulid>;
+
+public record Product(ProductId Id, string Name);
+
+// Create a new product with a new Ulid-based id
+var product = new Product(ProductId.New(), "Product Name");
+```
 
 ## Customization via Templates
 
@@ -188,6 +219,39 @@ Things to note at template expansion time:
 1. The `TSelf` type is replaced with the actual name of the struct id.
 1. The primary constructor on the template is removed since it is already provided 
    by anoother generator.
+
+
+You can also customize code generation for the `TValue`s used in your struct ids. 
+For example, the support for automatically registering a generic `Dapper.SqlMapper.TypeHandler<T>` 
+when a `TValue` implements both `IParsable<T>` and `IFormattable` is implemented as a 
+so-called `TValue` template:
+
+```csharp
+[TValue]
+file class TValue_TypeHandler : Dapper.SqlMapper.TypeHandler<TValue>
+{
+    public override TValue Parse(object value) => TValue.Parse((string)value, null);
+
+    public override void SetValue(IDbDataParameter parameter, TValue value)
+    {
+        parameter.DbType = DbType.String;
+        parameter.Value = value.ToString(null, null);
+    }
+}
+
+file partial struct TValue : IParsable<TValue>, IFormattable
+{
+    public static TValue Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out TValue result) => throw new NotImplementedException();
+    public string ToString(string? format, IFormatProvider? formatProvider) => throw new NotImplementedException();
+}
+```
+
+If you use use [Ulid](https://github.com/Cysharp/Ulid) as a value type in your struct ids, 
+for example, the template will be applied since `Ulid` implements both `IParsable<T>` and 
+`IFormattable`. The generated code will look like this:
+
+```csharp
 
 
 <!-- #content -->

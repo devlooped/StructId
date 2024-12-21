@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StructId;
 
-// TODO: pending making it conditionally included at compile-time
 [TValue]
 file class TValue_ValueConverter : ValueConverter<TValue, string>
 {
