@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApi", "MinimalApi\Mi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvcWebApp", "MvcWebApp\MvcWebApp.csproj", "{98DCCA61-3848-967E-E422-1DEDB4CB8569}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleDb", "ConsoleDb\ConsoleDb.csproj", "{A66CF326-8BE8-2BD1-25F7-0D7960DFAFC6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{98DCCA61-3848-967E-E422-1DEDB4CB8569}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98DCCA61-3848-967E-E422-1DEDB4CB8569}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98DCCA61-3848-967E-E422-1DEDB4CB8569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A66CF326-8BE8-2BD1-25F7-0D7960DFAFC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A66CF326-8BE8-2BD1-25F7-0D7960DFAFC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A66CF326-8BE8-2BD1-25F7-0D7960DFAFC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A66CF326-8BE8-2BD1-25F7-0D7960DFAFC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
