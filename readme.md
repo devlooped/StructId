@@ -135,7 +135,19 @@ public readonly partial record struct ProductId : IStructId<Ulid>;
 public record Product(ProductId Id, string Name);
 
 // Create a new product with a new Ulid-based id
-var product = new Product(ProductId.New(), "Product Name");
+var productId = Ulid.NewUlid();
+var product = new Product(new ProductId(productId), "Product");
+
+// Seed data
+connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", new Product(ProductId.New(), "Product1"));
+connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", product);
+connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", new Product(ProductId.New(), "Product2"));
+
+// showcase we can query by the underlying ulid
+var saved1 = connection.QueryFirst<Product>("SELECT * FROM Products WHERE Id = @Id", new { Id = productId });
+
+// showcase we can query by the ulid-based struct id
+var saved2 = connection.QueryFirst<Product>("SELECT * FROM Products WHERE Id = @Id", new { Id = new ProductId(productId) });
 ```
 
 ## Customization via Templates
