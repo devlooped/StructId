@@ -265,9 +265,13 @@ file record struct TValue;
 ```
 
 The `TValue` is subsequently defined as a file-local type where you can 
-specify whether it's a struct or a class and any interfaces it implements. 
-These are used to constrain the template expansion to only apply to struct ids, 
-such as those whose `TValue` is a struct above.
+specify any interfaces it implements. If no constraints need to apply to 
+`TValue`, you can just leave the declaration empty, meaning "any value type".
+
+> NOTE: The type of declaration (struct, class, record, etc.) of `TValue` is not checked, 
+> since in many cases you'd end up having to create two versions of the same template, 
+> one for structs and another for strings, since they are not value types and have no 
+> common declaration type.
 
 Here's another example from the built-in templates that uses this technique to
 apply to all struct ids whose `TValue` implements `IComparable<TValue>`:
@@ -306,14 +310,18 @@ This automatically covers not only all built-in value types, but also any custom
 types that implement the interface, making the code generation much more flexible 
 and powerful.
 
+> NOTE: if you need to exclude just the string type from applying to the `TValue`, 
+> you can use the inline comment `/*!string*/` in the primary constructor parameter 
+> type, as in `TSelf(/*!string*/ TValue Value)`.
+
 In addition to constraining on the `TValue` type, you can also constrain on the
 the struct id/`TSelf` itself by declaring the inheritance requirements in a partial 
 class of `TSelf` in the template. For example, the following (built-in) template 
-ensures it's only applied/expanded for struct ids whose `TValue` is [Ulid](https://github.com/Cysharp/Ulid) 
-and implement `INewable<TSelf, Ulid>`. Its usefulness in this case is that 
-the given interface constraint allows us to use the `TSelf.New(Ulid)` static interface 
+ensures it's only applied to struct ids whose `TValue` is [Ulid](https://github.com/Cysharp/Ulid) 
+and implement `INewable<TSelf, Ulid>`. This is useful in this case since the given 
+interface constraint allows us to use the `TSelf.New(Ulid)` static interface 
 factory method and have it recognized by the C# compiler as valid code as part of the 
-implementation of the parameterless `New()` factory method:
+implementation of introduced parameterless `New()` factory method provided by the template:
 
 ```csharp
 [TStructId]
@@ -329,8 +337,8 @@ file partial record struct TSelf : INewable<TSelf, Ulid>
 }
 ```
 
-> NOTE: the built-in templates will always provide an implementation of 
-> `INewable<TSelf, TValue>`.
+> NOTE: the built-in templates will always emit an implementation of 
+> `INewable<TSelf, TValue>` for all struct ids.
  
 Here you can see that the constraint that the value type must be `Ulid` is enforced by 
 the `TValue` constructor parameter type, while the interface constraint in the partial 

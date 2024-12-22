@@ -31,6 +31,8 @@ public class DapperGenerator() : BaseGenerator(
 
         var builtInHandled = source.Where(x => IsBuiltIn(x.TValue.ToFullName()));
 
+        // Any type in the compilation that inherits from Dapper.SqlMapper.TypeHandler<T> is also picked up, 
+        // unless its a value template
         var customHandlers = context.CompilationProvider
             .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
             .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName("Dapper.SqlMapper+TypeHandler`1")))
@@ -41,17 +43,21 @@ public class DapperGenerator() : BaseGenerator(
             .Select((x, _) => x.Left)
             .Collect();
 
+        // Non built-in value types can be templatized by using [TValue] templates. These would necessarily be
+        // file-local types which are not registered as handlers themselves but applied to each struct id TValue in turn.
         var templatizedValues = context.SelectTemplatizedValues()
             .Where(x => !IsBuiltIn(x.TValue.ToFullName()))
             .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName("Dapper.SqlMapper+TypeHandler`1")))
             .Where(x => x.Left.Template.TTemplate.Is(x.Right))
             .Select((x, _) => x.Left);
 
+        // If there are custom type handlers for value types that are in turn used in struct ids, we need to register them 
+        // as handlers that pass-through to the value handler itself. 
         var customHandled = source
             .Combine(customHandlers.Combine(templatizedValues.Collect()))
             .Select((x, _) =>
             {
-                (TemplateArgs args, (ImmutableArray<INamedTypeSymbol> handlers, ImmutableArray<TValueTemplate> templatized)) = x;
+                (TemplateArgs args, (ImmutableArray<INamedTypeSymbol> handlers, ImmutableArray<TemplatizedTValue> templatized)) = x;
 
                 var handlerType = args.ReferenceType.Construct(args.TValue);
                 var handler = handlers.FirstOrDefault(x => x.Is(handlerType, false));
@@ -84,7 +90,7 @@ public class DapperGenerator() : BaseGenerator(
         return source.Where(x => false);
     }
 
-    void GenerateHandlers(SourceProductionContext context, ((ImmutableArray<TemplateArgs> builtInHandled, ImmutableArray<TemplateArgs> customHandled), ImmutableArray<TValueTemplate> templatizedValues) source)
+    void GenerateHandlers(SourceProductionContext context, ((ImmutableArray<TemplateArgs> builtInHandled, ImmutableArray<TemplateArgs> customHandled), ImmutableArray<TemplatizedTValue> templatizedValues) source)
     {
         var ((builtInHandled, customHandled), templatizedValues) = source;
         if (builtInHandled.Length == 0 && customHandled.Length == 0 && templatizedValues.Length == 0)
@@ -133,7 +139,7 @@ public class DapperGenerator() : BaseGenerator(
 
     class ValueHandlerModelCode
     {
-        public ValueHandlerModelCode(TValueTemplate template)
+        public ValueHandlerModelCode(TemplatizedTValue template)
         {
             var declaration = template.Template.Syntax.ApplyValue(template.TValue)
                .DescendantNodes()

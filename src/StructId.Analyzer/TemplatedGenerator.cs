@@ -12,22 +12,41 @@ namespace StructId;
 public partial class TemplatedGenerator : IIncrementalGenerator
 {
     /// <summary>
-    /// Represents a template for struct ids.
+    /// Represents an instantiation of a struct id template for a specific combination 
+    /// of a <paramref name="TSelf"/> and <paramref name="TValue"/>.
     /// </summary>
-    /// <param name="StructId">The struct id type, either IStructId or IStructId{T}.</param>
+    /// <param name="TSelf">The struct id type, either IStructId or IStructId{T}.</param>
     /// <param name="TValue">The type of value the struct id holds, such as Guid or string.</param>
     /// <param name="Template">The template to apply to it.</param>
-    record IdTemplate(INamedTypeSymbol StructId, INamedTypeSymbol TValue, Template Template);
+    record TemplatizedStructId(INamedTypeSymbol TSelf, INamedTypeSymbol TValue, Template Template);
 
+    /// <summary>
+    /// Represents the template that will be applied to a struct id.
+    /// </summary>
+    /// <param name="TSelf">Declaration and potential constraints to check on struct ids for the template to apply.</param>
+    /// <param name="TValue">Target value type, potentially containing a file-local declaration with further constraints to apply.</param>
+    /// <param name="Attribute">The <c>[TStructId]</c> attribute applied to the <paramref name="TSelf"/>.</param>
+    /// <param name="KnownTypes">Useful known compilation types used at template expansion time.</param>
     record Template(INamedTypeSymbol TSelf, INamedTypeSymbol TValue, AttributeData Attribute, KnownTypes KnownTypes)
     {
+        /// <summary>
+        /// Originally declared TValue type in the primary constructor itself.
+        /// </summary>
         public INamedTypeSymbol? OriginalTValue { get; init; }
 
-        // A custom TValue is a file-local type declaration.
+        /// <summary>
+        /// Whether the a custom TValue is a file-local type declaration providing further constraints.
+        /// </summary>
         public bool IsLocalTValue => OriginalTValue?.IsFileLocal == true;
 
+        /// <summary>
+        /// The syntax tree root of the template file.
+        /// </summary>
         public SyntaxNode Syntax { get; } = TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot();
 
+        /// <summary>
+        /// Whether the template should not be applied to string value types.
+        /// </summary>
         public bool NoString { get; } = new NoStringSyntaxWalker().Accept(
             TSelf.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot());
 
@@ -131,18 +150,18 @@ public partial class TemplatedGenerator : IIncrementalGenerator
                 // If the TValue/Value implements or inherits from the template base type and/or its interfaces
                 return templates
                     .Where(template => template.AppliesTo(tid))
-                    .Select(template => new IdTemplate(id, tid, template));
+                    .Select(template => new TemplatizedStructId(id, tid, template));
             });
 
         context.RegisterSourceOutput(ids, GenerateCode);
     }
 
-    void GenerateCode(SourceProductionContext context, IdTemplate source)
+    void GenerateCode(SourceProductionContext context, TemplatizedStructId source)
     {
         var templateFile = Path.GetFileNameWithoutExtension(source.Template.Syntax.SyntaxTree.FilePath);
-        var hintName = $"{source.StructId.ToFileName()}/{templateFile}.cs";
+        var hintName = $"{source.TSelf.ToFileName()}/{templateFile}.cs";
 
-        var applied = source.Template.Syntax.Apply(source.StructId);
+        var applied = source.Template.Syntax.Apply(source.TSelf);
         var output = applied.ToFullString();
 
         context.AddSource(hintName, SourceText.From(output, Encoding.UTF8));

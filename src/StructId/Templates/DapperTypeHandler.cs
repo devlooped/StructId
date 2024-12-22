@@ -6,7 +6,6 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using StructId;
 
-// TODO: pending making it conditionally included at compile-time
 [TValue]
 file class TValue_TypeHandler : Dapper.SqlMapper.TypeHandler<TValue>
 {

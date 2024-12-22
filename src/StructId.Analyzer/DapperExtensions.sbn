@@ -20,21 +20,25 @@ public static partial class DapperExtensions
     /// </summary>
     public static TConnection UseStructId<TConnection>(this TConnection connection) where TConnection : IDbConnection
     {
+        // Built-in supported TValues
         {{~ for id in Ids ~}}
         if (!SqlMapper.HasTypeHandler(typeof({{ id.TSelf }})))
             SqlMapper.AddTypeHandler(new DapperTypeHandler{{ id.TValue }}<{{ id.TSelf }}>());
 
         {{~ end ~}}
+        // Custom TValue handlers via pass-through type handler for the struct id
         {{~ for id in CustomIds ~}}
         if (!SqlMapper.HasTypeHandler(typeof({{ id.TSelf }})))
             SqlMapper.AddTypeHandler(new DapperTypeHandler<{{ id.TSelf }}, {{ id.TValue }}, {{ id.THandler }}>());
 
         {{~ end ~}}
+        // Custom TValue handlers that may not be used in struct ids at all
         {{~ for handler in CustomValues ~}}
         if (!SqlMapper.HasTypeHandler(typeof({{ handler.TValue }})))
             SqlMapper.AddTypeHandler(new {{ handler.THandler }}());
 
         {{~ end ~}}
+        // Templatized TValue handlers
         {{~ for handler in TemplatizedValueHandlers ~}}
         if (!SqlMapper.HasTypeHandler(typeof({{ handler.TValue }})))
             SqlMapper.AddTypeHandler(new {{ handler.THandler }}());
