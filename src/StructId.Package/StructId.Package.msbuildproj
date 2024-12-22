@@ -5,7 +5,8 @@
     <DevelopmentDependency>true</DevelopmentDependency>
     <Description>Stronly typed ids using readonly record structs and modern C# features.</Description>
     <PackageTags>dotnet record struct typed id</PackageTags>
-    <PackFolder>build</PackFolder>
+    <PackFolder>buildTransitive</PackFolder>
+    <PackNone>true</PackNone>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NuGetizer" Version="1.2.3" />
@@ -15,7 +16,7 @@
     <ProjectReference Include="..\StructId.CodeFix\StructId.CodeFix.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\StructId\*.cs" Visible="false" />
+    <Content Include="..\StructId\*.cs" BuildAction="Compile" CodeLanguage="cs" Pack="true" />
     <None Include="..\StructId\Templates\*.cs" PackFolder="$(PackFolder)\Templates" Visible="false" />
     <None Update="@(None)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

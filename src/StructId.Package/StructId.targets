@@ -1,50 +1,21 @@
 <Project>
 
-  <PropertyGroup>
-    <StructIdNamespace Condition="$(StructIdNamespace) == ''">$(RootNamespace)</StructIdNamespace>
-    <StructIdNamespace Condition="$(StructIdNamespace) == ''">StructId</StructIdNamespace>
-    <StructIdPathHash Condition="$(StructIdNamespace) != ''">$([MSBuild]::StableStringHash($(StructIdNamespace)))\</StructIdPathHash>
-  </PropertyGroup>
-
   <ItemGroup>
-    <StructId Include="$(MSBuildThisFileDirectory)*.cs" Link="StructId\$(StructIdPathHash)%(Filename)%(Extension)" />
-    <StructId Include="$(MSBuildThisFileDirectory)Templates\*.cs" Link="StructId\$(StructIdPathHash)Templates\%(Filename)%(Extension)" />
+    <!-- This is safe to do even if we're in a transitive targets file, since content files providing 
+         these items won't exist in a transitive project. See https://github.com/NuGet/Home/issues/7420 -->
+    <Compile Update="@(Compile)">
+      <Visible Condition="'%(NuGetItemType)' == 'Compile' and '%(NuGetPackageId)' == 'StructId'">false</Visible>
+      <Link Condition="'%(NuGetItemType)' == 'Compile' and '%(NuGetPackageId)' == 'StructId'">StructId\%(Filename)%(Extension)</Link>
+    </Compile>
+
+    <!-- Templates should always be added transitively since they are all file-local and their 
+         syntax tree is required in the compilation for them to apply properly -->
+    <StructId Include="$(MSBuildThisFileDirectory)Templates\*.cs"
+              Link="StructId\Templates\%(Filename)%(Extension)"
+              Visible="false"/>    
   </ItemGroup>
 
-  <Target Name="CollectStructIds">
-    <ItemGroup>
-      <StructId>
-        <TargetPath>$(IntermediateOutputPath)%(Link)</TargetPath>
-      </StructId>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="IncludeStructIdAsIs" Condition="$(StructIdNamespace) == 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="%(StructId.TargetPath)">
-    <!-- No copying needed in this case, we'll just include the original files. -->
-    <ItemGroup>
-      <StructId>
-        <TargetPath>%(FullPath)</TargetPath>
-      </StructId>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddStructIdContent" Condition="$(StructIdNamespace) != 'StructId'" DependsOnTargets="CollectStructIds" Inputs="@(StructId)" Outputs="|%(StructId.Identity)|">
-    <PropertyGroup>
-      <StructIdContent>$([System.IO.File]::ReadAllText(%(StructId.FullPath)))</StructIdContent>
-      <StructIdContent>$(StructIdContent.Replace('using StructId', 'using $(StructIdNamespace)').Replace('namespace StructId', 'namespace $(StructIdNamespace)'))</StructIdContent>
-    </PropertyGroup>
-    <ItemGroup>
-      <StructId>
-        <Content>$([MSBuild]::Unescape($(StructIdContent)))</Content>
-      </StructId>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="CopyStructIdNamespaced" Condition="$(StructIdNamespace) != 'StructId'" DependsOnTargets="AddStructIdContent" Inputs="@(StructId)" Outputs="%(StructId.TargetPath)">
-    <WriteRaw Content="%(StructId.Content)" SourcePath="%(StructId.FullPath)" TargetPath="%(StructId.TargetPath)" />
-  </Target>
-
-  <Target Name="AddStructId" DependsOnTargets="IncludeStructIdAsIs;CopyStructIdNamespaced;ResolveLockFileReferences" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
+  <Target Name="AddStructId" DependsOnTargets="ResolveLockFileReferences" BeforeTargets="GenerateMSBuildEditorConfigFileShouldRun">
     <!-- Feature detection -->
     <PropertyGroup>
       <UseDapper>false</UseDapper>
@@ -62,29 +33,8 @@
     </ItemGroup>
     <!-- Add final template items to project -->
     <ItemGroup>
-      <Compile Include="%(StructId.TargetPath)" />
+      <Compile Include="%(StructId.FullPath)" />
     </ItemGroup>
   </Target>
-
-  <UsingTask TaskName="WriteRaw" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <Content ParameterType="System.String" Required="true" />
-      <SourcePath ParameterType="System.String" Required="true" />
-      <TargetPath ParameterType="System.String" Required="true" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="System" />
-      <Using Namespace="System.IO" />
-      <Using Namespace="System.Text"/>
-      <Using Namespace="Microsoft.Build.Framework"/>
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-        Directory.CreateDirectory(Path.GetDirectoryName(TargetPath));
-        File.WriteAllText(TargetPath, Content, Encoding.UTF8);
-        File.SetLastWriteTimeUtc(TargetPath, File.GetLastWriteTimeUtc(SourcePath));
-        ]]>
-      </Code>
-    </Task>
-  </UsingTask>
 
 </Project>

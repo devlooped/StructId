@@ -41,9 +41,6 @@ The package is a [development dependency](https://github.com/NuGet/Home/wiki/Dev
 meaning it will not add any run-time dependencies to your project (or package if you 
 publish one that uses struct ids).
 
-The default target namespace for the included types will match the `RootNamespace` of the 
-project, but can be customized by setting the `StructIdNamespace` property.
-
 You can simply declare a new ID type by implementing `IStructId<TValue>`:
 
 ```csharp
