@@ -31,14 +31,14 @@ public static class CodeTemplate
 
     public static string Apply(string template, string valueType, bool normalizeWhitespace = false)
     {
-        var applied = ApplyImpl(Parse(template), valueType);
+        var applied = ApplyValueImpl(Parse(template), valueType);
 
         return normalizeWhitespace ?
             applied.NormalizeWhitespace().ToFullString().Trim() :
             applied.ToFullString().Trim();
     }
 
-    public static SyntaxNode ApplyValue(this SyntaxNode node, INamedTypeSymbol valueType) => ApplyImpl(node, valueType.ToFullName());
+    public static SyntaxNode ApplyValue(this SyntaxNode node, INamedTypeSymbol valueType) => ApplyValueImpl(node, valueType.ToFullName());
 
     public static SyntaxNode Apply(this SyntaxNode node, INamedTypeSymbol structId)
     {
@@ -59,7 +59,7 @@ public static class CodeTemplate
         return ApplyImpl(root, structId.Name, tid, targetNamespace, corens);
     }
 
-    static SyntaxNode ApplyImpl(this SyntaxNode node, string valueType)
+    static SyntaxNode ApplyValueImpl(this SyntaxNode node, string valueType)
     {
         var root = node.SyntaxTree.GetCompilationUnitRoot();
         if (root == null)
@@ -194,7 +194,7 @@ public static class CodeTemplate
             !node.AttributeLists.Any(list => list.Attributes.Any(a => a.IsValueTemplate()));
     }
 
-    class TemplateRewriter(string tself, string tid) : CSharpSyntaxRewriter
+    class TemplateRewriter(string tself, string tvalue) : CSharpSyntaxRewriter
     {
         public override SyntaxNode? VisitRecordDeclaration(RecordDeclarationSyntax node)
         {
@@ -282,8 +282,20 @@ public static class CodeTemplate
                 return IdentifierName(tself)
                     .WithLeadingTrivia(node.Identifier.LeadingTrivia)
                     .WithTrailingTrivia(node.Identifier.TrailingTrivia);
-            else if (node.Identifier.Text == "TId" || node.Identifier.Text == "TValue")
-                return IdentifierName(tid)
+
+            if (node.Identifier.Text.StartsWith("TSelf_"))
+                return IdentifierName(node.Identifier.Text.Replace("TSelf_", tvalue.Replace('.', '_') + "_"))
+                    .WithLeadingTrivia(node.Identifier.LeadingTrivia)
+                    .WithTrailingTrivia(node.Identifier.TrailingTrivia);
+
+            // TODO: remove TId as it's legacy
+            if (node.Identifier.Text == "TId" || node.Identifier.Text == "TValue")
+                return IdentifierName(tvalue)
+                    .WithLeadingTrivia(node.Identifier.LeadingTrivia)
+                    .WithTrailingTrivia(node.Identifier.TrailingTrivia);
+
+            if (node.Identifier.Text.StartsWith("TValue_"))
+                return IdentifierName(node.Identifier.Text.Replace("TValue_", tvalue.Replace('.', '_') + "_"))
                     .WithLeadingTrivia(node.Identifier.LeadingTrivia)
                     .WithTrailingTrivia(node.Identifier.TrailingTrivia);
 
@@ -297,8 +309,20 @@ public static class CodeTemplate
                 return Identifier(tself)
                     .WithLeadingTrivia(token.LeadingTrivia)
                     .WithTrailingTrivia(token.TrailingTrivia);
-            else if (token.IsKind(SyntaxKind.IdentifierToken) && (token.Text == "TId" || token.Text == "TValue"))
-                return Identifier(tid)
+
+            if (token.IsKind(SyntaxKind.IdentifierToken) && token.Text.StartsWith("TSelf_"))
+                return Identifier(token.Text.Replace("TSelf_", tvalue.Replace('.', '_') + "_"))
+                    .WithLeadingTrivia(token.LeadingTrivia)
+                    .WithTrailingTrivia(token.TrailingTrivia);
+
+            // TODO: remove TId as it's legacy
+            if (token.IsKind(SyntaxKind.IdentifierToken) && (token.Text == "TId" || token.Text == "TValue"))
+                return Identifier(tvalue)
+                    .WithLeadingTrivia(token.LeadingTrivia)
+                    .WithTrailingTrivia(token.TrailingTrivia);
+
+            if (token.IsKind(SyntaxKind.IdentifierToken) && token.Text.StartsWith("TValue_"))
+                return Identifier(token.Text.Replace("TValue_", tvalue.Replace('.', '_') + "_"))
                     .WithLeadingTrivia(token.LeadingTrivia)
                     .WithTrailingTrivia(token.TrailingTrivia);
 

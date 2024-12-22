@@ -30,11 +30,11 @@ public class RecordAnalyzer : DiagnosticAnalyzer
 
     static void Analyze(SyntaxNodeAnalysisContext context)
     {
-        var ns = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetStructIdNamespace();
+        var known = new KnownTypes(context.Compilation);
 
         if (context.Node is not TypeDeclarationSyntax typeDeclaration ||
-            context.Compilation.GetTypeByMetadataName($"{ns}.IStructId`1") is not { } structIdTypeOfT ||
-            context.Compilation.GetTypeByMetadataName($"{ns}.IStructId") is not { } structIdType)
+            known.IStructIdT is not { } structIdTypeOfT ||
+            known.IStructId is not { } structIdType)
             return;
 
         var symbol = context.SemanticModel.GetDeclaredSymbol(typeDeclaration);

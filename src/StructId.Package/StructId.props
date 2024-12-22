@@ -1,7 +1,3 @@
 <Project>
 
-  <ItemGroup>
-    <CompilerVisibleProperty Include="StructIdNamespace" />
-  </ItemGroup>
-
 </Project>

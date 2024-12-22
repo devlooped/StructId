@@ -80,11 +80,8 @@ public partial class TemplatedGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var structIdNamespace = context.AnalyzerConfigOptionsProvider.GetStructIdNamespace();
-
         var known = context.CompilationProvider
-            .Combine(structIdNamespace)
-            .Select((x, _) => new KnownTypes(x.Left, x.Right));
+            .Select((x, _) => new KnownTypes(x));
 
         var templates = context.CompilationProvider
             .SelectMany((x, _) => x.GetAllTypes(includeReferenced: true).OfType<INamedTypeSymbol>())
@@ -99,38 +96,39 @@ public partial class TemplatedGenerator : IIncrementalGenerator
             .Combine(known)
             .Select((x, cancellation) =>
             {
-                var (structId, known) = x;
+                var (tself, known) = x;
                 // We infer the idType from the required primary constructor Value parameter type
-                var idType = (INamedTypeSymbol)structId.GetMembers().OfType<IPropertySymbol>().First(p => p.Name == "Value").Type;
-                var attribute = structId.GetAttributes().First(a => a.AttributeClass != null && a.AttributeClass.Is(known.TStructId));
+                var tvalue = (INamedTypeSymbol)tself.GetMembers().OfType<IPropertySymbol>().First(p => p.Name == "Value").Type;
+                var attribute = tself.GetAttributes().First(a => a.IsStructIdTemplate());
 
                 // The id type isn't declared in the same file, so we don't do anything fancy with it.
-                if (idType.DeclaringSyntaxReferences.Length == 0)
-                    return new Template(structId, idType, attribute, known);
+                if (tvalue.DeclaringSyntaxReferences.Length == 0)
+                    return new Template(tself, tvalue, attribute, known);
 
                 // Otherwise, the idType is a file-local type with a single interface
-                var type = idType.DeclaringSyntaxReferences[0].GetSyntax(cancellation) as TypeDeclarationSyntax;
+                var type = tvalue.DeclaringSyntaxReferences[0].GetSyntax(cancellation) as TypeDeclarationSyntax;
                 var iface = type?.BaseList?.Types.FirstOrDefault()?.Type;
                 if (type == null || iface == null)
-                    return new Template(structId, idType, attribute, known) { OriginalTValue = idType };
+                    return new Template(tself, tvalue, attribute, known) { OriginalTValue = tvalue };
 
                 if (x.Right.Compilation.GetSemanticModel(type.SyntaxTree).GetSymbolInfo(iface).Symbol is not INamedTypeSymbol ifaceType)
-                    return new Template(structId, idType, attribute, known);
+                    return new Template(tself, tvalue, attribute, known);
 
                 // if the interface is a generic type with a single type argument that is the same as the idType
                 // make it an unbound generic type. We'll bind it to the actual idType later at template render time.
-                if (ifaceType.IsGenericType && ifaceType.TypeArguments.Length == 1 && ifaceType.TypeArguments[0].Equals(idType, SymbolEqualityComparer.Default))
+                if (ifaceType.IsGenericType && ifaceType.TypeArguments.Length == 1 && ifaceType.TypeArguments[0].Equals(tvalue, SymbolEqualityComparer.Default))
                     ifaceType = ifaceType.ConstructUnboundGenericType();
 
-                return new Template(structId, ifaceType, attribute, known)
+                return new Template(tself, ifaceType, attribute, known)
                 {
-                    OriginalTValue = idType
+                    OriginalTValue = tvalue
                 };
             })
             .Collect();
 
         var ids = context.CompilationProvider
-            .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
+            .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>()
+            .Where(t => !t.IsValueTemplate() && !t.IsStructIdTemplate()))
             .Where(x => x.IsRecord && x.IsValueType && x.IsPartial())
             .Combine(known)
             .Where(x => x.Left.Is(x.Right.IStructId) || x.Left.Is(x.Right.IStructIdT))

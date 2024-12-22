@@ -89,11 +89,8 @@ static class TemplatizedTValueExtensions
     /// </summary>
     public static IncrementalValuesProvider<TemplatizedTValue> SelectTemplatizedValues(this IncrementalGeneratorInitializationContext context)
     {
-        var structIdNamespace = context.AnalyzerConfigOptionsProvider.GetStructIdNamespace();
-
         var known = context.CompilationProvider
-            .Combine(structIdNamespace)
-            .Select((x, _) => new KnownTypes(x.Left, x.Right));
+            .Select((x, _) => new KnownTypes(x));
 
         var templates = context.CompilationProvider
             .SelectMany((x, _) => x.GetAllTypes(includeReferenced: true).OfType<INamedTypeSymbol>())

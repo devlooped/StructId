@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Linq;
+using Microsoft.CodeAnalysis;
 
 namespace StructId;
 
@@ -6,23 +7,26 @@ namespace StructId;
 /// Provides access to some common types and properties used in the compilation.
 /// </summary>
 /// <param name="Compilation">The compilation used to resolve the known types.</param>
-/// <param name="StructIdNamespace">The namespace for StructId types.</param>
-public record KnownTypes(Compilation Compilation, string StructIdNamespace)
+public record KnownTypes(Compilation Compilation)
 {
+    public string StructIdNamespace => IStructId?.ContainingNamespace.ToFullName() ?? "StructId";
+
     /// <summary>
     /// System.String
     /// </summary>
     public INamedTypeSymbol String { get; } = Compilation.GetTypeByMetadataName("System.String")!;
+
     /// <summary>
     /// StructId.IStructId
     /// </summary>
-    public INamedTypeSymbol? IStructId { get; } = Compilation.GetTypeByMetadataName($"{StructIdNamespace}.IStructId");
+    public INamedTypeSymbol? IStructId { get; } = Compilation
+        .GetAllTypes(true)
+        .FirstOrDefault(x => x.MetadataName == "IStructId" && x.IsGeneratedByStructId());
+
     /// <summary>
     /// StructId.IStructId{T}
     /// </summary>
-    public INamedTypeSymbol? IStructIdT { get; } = Compilation.GetTypeByMetadataName($"{StructIdNamespace}.IStructId`1");
-    /// <summary>
-    /// StructId.TStructIdAttribute
-    /// </summary>
-    public INamedTypeSymbol? TStructId { get; } = Compilation.GetTypeByMetadataName($"{StructIdNamespace}.TStructIdAttribute");
+    public INamedTypeSymbol? IStructIdT { get; } = Compilation
+        .GetAllTypes(true)
+        .FirstOrDefault(x => x.MetadataName == "IStructId`1" && x.IsGeneratedByStructId());
 }
