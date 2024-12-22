@@ -25,6 +25,23 @@ public record User(UserId Id, string Name, Wallet Wallet);
 public class FunctionalTests(ITestOutputHelper output)
 {
     [Fact]
+    public void JsonConversion()
+    {
+        var product = new Product(ProductId.New(), "Product");
+
+        var json = System.Text.Json.JsonSerializer.Serialize(product);
+        var product2 = System.Text.Json.JsonSerializer.Deserialize<Product>(json);
+
+        Assert.Equal(product, product2);
+
+        var user = new User(UserId.New(1), "User", new Wallet(WalletId.New("1234"), "Wallet"));
+        json = System.Text.Json.JsonSerializer.Serialize(user);
+        var user2 = System.Text.Json.JsonSerializer.Deserialize<User>(json);
+
+        Assert.Equal(user, user2);
+    }
+
+    [Fact]
     public void EqualityTest()
     {
         var guid = Guid.NewGuid();

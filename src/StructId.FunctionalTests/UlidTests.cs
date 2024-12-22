@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
+using System.Text.Json;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -68,6 +69,17 @@ public partial class UlidToStringConverter : ValueConverter<Ulid, string>
 
 public class UlidTests
 {
+    [Fact]
+    public void JsonConversion()
+    {
+        var product = new UlidProduct(UlidId.New(), "Product");
+
+        var json = JsonSerializer.Serialize(product);
+        var product2 = JsonSerializer.Deserialize<UlidProduct>(json);
+
+        Assert.Equal(product, product2);
+    }
+
     [Fact]
     public void Dapper()
     {

@@ -11,10 +11,15 @@ public static partial class StructIdConverters
 {
     public class SystemTextJsonConverter<TSelf, TValue> : JsonConverter<TSelf>
         where TSelf : IStructId<TValue>, INewable<TSelf, TValue>
-        where TValue: struct, IParsable<TValue>
+        where TValue : struct, IParsable<TValue>
     {
         public override TSelf Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            => TSelf.New(TValue.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
+        {
+            if (reader.TokenType == JsonTokenType.String)
+                return TSelf.New(TValue.Parse(reader.GetString() ?? throw new FormatException("Unsupported null value for struct id."), CultureInfo.InvariantCulture));
+
+            return TSelf.New(JsonSerializer.Deserialize<TValue>(ref reader, options));
+        }
 
         public override void Write(Utf8JsonWriter writer, TSelf value, JsonSerializerOptions options)
         {
@@ -24,7 +29,7 @@ public static partial class StructIdConverters
                     writer.WriteStringValue(guid);
                     break;
                 case TValue inner:
-                    writer.WriteRawValue(inner.ToString());
+                    JsonSerializer.Serialize(writer, inner, options);
                     break;
                 default:
                     throw new InvalidOperationException("Unsupported value type.");
