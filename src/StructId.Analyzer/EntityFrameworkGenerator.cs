@@ -81,7 +81,7 @@ public class EntityFrameworkGenerator() : BaseGenerator(
             return idTemplate ??= CodeTemplate.Parse(ThisAssembly.Resources.Templates.EntityFramework.Text, args.KnownTypes.Compilation.GetParseOptions());
     }
 
-    void GenerateValueSelector(SourceProductionContext context, ((ImmutableArray<TemplateArgs>, ImmutableArray<INamedTypeSymbol>), ImmutableArray<TValueTemplate>) args)
+    void GenerateValueSelector(SourceProductionContext context, ((ImmutableArray<TemplateArgs>, ImmutableArray<INamedTypeSymbol>), ImmutableArray<TemplatizedTValue>) args)
     {
         ((var structIds, var customConverters), var templatizedConverters) = args;
 
@@ -119,7 +119,7 @@ public class EntityFrameworkGenerator() : BaseGenerator(
 
     class TemplatizedModel
     {
-        public TemplatizedModel(TValueTemplate template)
+        public TemplatizedModel(TemplatizedTValue template)
         {
             var declaration = template.Template.Syntax.ApplyValue(template.TValue)
                .DescendantNodes()

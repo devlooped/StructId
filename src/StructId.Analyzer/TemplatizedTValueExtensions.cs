@@ -6,11 +6,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace StructId;
 
 /// <summary>
-/// Represents a template for the value type of struct ids.
+/// Represents a templatized value type of a struct ids.
 /// </summary>
-/// <param name="TValue">The type of value the struct id holds, such as Guid or string.</param>
+/// <param name="TValue">The type of value the a struct id holds, such as Guid or string.</param>
 /// <param name="Template">The template to apply to it.</param>
-record TValueTemplate(INamedTypeSymbol TValue, TValueTemplateInfo Template)
+record TemplatizedTValue(INamedTypeSymbol TValue, TValueTemplate Template)
 {
     SyntaxNode? applied;
 
@@ -26,10 +26,26 @@ record TValueTemplate(INamedTypeSymbol TValue, TValueTemplateInfo Template)
     public string Render() => Declaration.ToFullString();
 }
 
-record TValueTemplateInfo(INamedTypeSymbol TTemplate, KnownTypes KnownTypes)
+/// <summary>
+/// Represents a generic file-local template that applies to TValues that match the template 
+/// constraints.
+/// </summary>
+/// <param name="TTemplate">The declared symbol of the template in the compilation.</param>
+/// <param name="KnownTypes">Useful known types for use when applying the template.</param>
+record TValueTemplate(INamedTypeSymbol TTemplate, KnownTypes KnownTypes)
 {
+    /// <summary>
+    /// Syntax root of the file declaring the template.
+    /// </summary>
     public SyntaxNode Syntax { get; } = TTemplate.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot();
 
+    /// <summary>
+    /// Whether the template should not be applied to string value types.
+    /// </summary>
+    /// <remarks>
+    /// Since strings implement also a bunch of interfaces, an easy way to exclude them 
+    /// from matching a struct value template that has a restriction on just 
+    /// </remarks>
     public bool NoString { get; } = new NoStringSyntaxWalker().Accept(
         TTemplate.DeclaringSyntaxReferences[0].GetSyntax().SyntaxTree.GetRoot());
 
@@ -66,9 +82,12 @@ record TValueTemplateInfo(INamedTypeSymbol TTemplate, KnownTypes KnownTypes)
     }
 }
 
-static class TValueTemplateExtensions
+static class TemplatizedTValueExtensions
 {
-    public static IncrementalValuesProvider<TValueTemplate> SelectTemplatizedValues(this IncrementalGeneratorInitializationContext context)
+    /// <summary>
+    /// Gets all instantiations of TValue templates that apply to the struct ids in the compilation.
+    /// </summary>
+    public static IncrementalValuesProvider<TemplatizedTValue> SelectTemplatizedValues(this IncrementalGeneratorInitializationContext context)
     {
         var structIdNamespace = context.AnalyzerConfigOptionsProvider.GetStructIdNamespace();
 
@@ -87,7 +106,7 @@ static class TValueTemplateExtensions
                     r => r.GetSyntax() is TypeDeclarationSyntax declaration && x.GetAttributes().Any(
                         a => a.IsValueTemplate())))
             .Combine(known)
-            .Select((x, cancellation) => new TValueTemplateInfo(x.Left, x.Right))
+            .Select((x, cancellation) => new TValueTemplate(x.Left, x.Right))
             .Collect();
 
         var values = context.CompilationProvider
@@ -104,20 +123,9 @@ static class TValueTemplateExtensions
                 var tvalue = (INamedTypeSymbol)structId.TypeArguments[0];
                 return templates
                     .Where(template => template.AppliesTo(tvalue))
-                    .Select(template => new TValueTemplate(tvalue, template));
+                    .Select(template => new TemplatizedTValue(tvalue, template));
             });
 
         return values;
     }
-
-    //void GenerateCode(SourceProductionContext context, TIdTemplate source)
-    //{
-    //    var templateFile = Path.GetFileNameWithoutExtension(source.Template.Syntax.SyntaxTree.FilePath);
-    //    var hintName = $"{source.TValue.ToFileName()}/{templateFile}.cs";
-
-    //    var applied = source.Template.Syntax.Apply(source.TValue);
-    //    var output = applied.ToFullString();
-
-    //    context.AddSource(hintName, SourceText.From(output, Encoding.UTF8));
-    //}
 }

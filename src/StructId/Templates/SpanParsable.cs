@@ -32,7 +32,7 @@ file partial record struct TSelf
 }
 
 // This will be removed when applying the template to each user-defined struct id.
-file record struct TValue : ISpanParsable<TValue>
+file struct TValue : ISpanParsable<TValue>
 {
     public static TValue Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => throw new NotImplementedException();
     public static TValue Parse(string s, IFormatProvider? provider) => throw new NotImplementedException();
