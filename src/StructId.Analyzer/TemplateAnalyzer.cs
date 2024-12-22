@@ -30,8 +30,6 @@ public class TemplateAnalyzer : DiagnosticAnalyzer
 
     static void Analyze(SyntaxNodeAnalysisContext context)
     {
-        var ns = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetStructIdNamespace();
-
         if (context.Node is not TypeDeclarationSyntax typeDeclaration ||
             !typeDeclaration.AttributeLists.Any(list => list.Attributes.Any(attr => attr.IsStructIdTemplate())))
             return;

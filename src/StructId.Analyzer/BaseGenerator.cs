@@ -26,11 +26,8 @@ public abstract class BaseGenerator(string referenceType, string stringTemplate,
 
     public virtual void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var structIdNamespace = context.AnalyzerConfigOptionsProvider.GetStructIdNamespace();
-
         var known = context.CompilationProvider
-            .Combine(structIdNamespace)
-            .Select((x, _) => new KnownTypes(x.Left, x.Right));
+            .Select((x, _) => new KnownTypes(x));
 
         // Locate the required type
         var types = context.CompilationProvider

@@ -15,19 +15,21 @@ public class NewtonsoftJsonGenerator() : BaseGenerator(
     {
         base.Initialize(context);
 
+        var source = context.CompilationProvider
+            .Select((x, _) => (new KnownTypes(x), x.GetTypeByMetadataName("Newtonsoft.Json.JsonConverter`1")));
+
         context.RegisterSourceOutput(
-            context.CompilationProvider
-            .Select((x, _) => x.GetTypeByMetadataName("Newtonsoft.Json.JsonConverter`1"))
-            .Combine(context.AnalyzerConfigOptionsProvider.GetStructIdNamespace()),
+            source,
             (context, source) =>
             {
-                if (source.Left == null)
+                (var known, var converter) = source;
+                if (converter == null)
                     return;
 
                 context.AddSource("NewtonsoftJsonConverter.cs", SourceText.From(
                     ThisAssembly.Resources.Templates.NewtonsoftJsonConverter_1.Text
-                    .Replace("namespace StructId;", $"namespace {source.Right};")
-                    .Replace("using StructId;", $"using {source.Right};"),
+                    .Replace("namespace StructId;", $"namespace {known.StructIdNamespace};")
+                    .Replace("using StructId;", $"using {known.StructIdNamespace};"),
                     Encoding.UTF8));
             });
     }

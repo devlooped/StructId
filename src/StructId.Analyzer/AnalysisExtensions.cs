@@ -29,6 +29,11 @@ public static class AnalysisExtensions
         => (CSharpParseOptions?)compilation.SyntaxTrees.FirstOrDefault()?.Options ??
             CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest);
 
+    public static bool IsGeneratedByStructId(this ISymbol symbol)
+        => symbol.GetAttributes().Any(a
+            => a.AttributeClass?.Name == "GeneratedCodeAttribute" &&
+               a.ConstructorArguments.Select(c => c.Value).OfType<string>().Any(v => v == nameof(StructId)));
+
     /// <summary>
     /// Checks whether the <paramref name="this"/> type inherits or implements the 
     /// <paramref name="baseTypeOrInterface"/> type, even if it's a generic type.
@@ -61,12 +66,6 @@ public static class AnalysisExtensions
 
         return Is(@this.BaseType, baseTypeOrInterface, looseGenerics);
     }
-
-    public static string GetStructIdNamespace(this AnalyzerConfigOptions options)
-        => options.TryGetValue("build_property.StructIdNamespace", out var ns) && !string.IsNullOrEmpty(ns) ? ns : "StructId";
-
-    public static IncrementalValueProvider<string> GetStructIdNamespace(this IncrementalValueProvider<AnalyzerConfigOptionsProvider> options)
-        => options.Select((x, _) => x.GlobalOptions.TryGetValue("build_property.StructIdNamespace", out var ns) ? ns : "StructId");
 
     public static bool ImplementsExplicitly(this INamedTypeSymbol namedTypeSymbol, INamedTypeSymbol interfaceTypeSymbol)
     {
@@ -156,12 +155,18 @@ public static class AnalysisExtensions
 
     public static bool IsStructId(this ITypeSymbol type) => type.AllInterfaces.Any(x => x.Name == "IStructId");
 
+    public static bool IsValueTemplate(this INamedTypeSymbol symbol)
+        => symbol.GetAttributes().Any(IsValueTemplate);
+
     public static bool IsValueTemplate(this AttributeData attribute)
         => attribute.AttributeClass?.Name == "TValue" ||
            attribute.AttributeClass?.Name == "TValueAttribute";
 
     public static bool IsValueTemplate(this AttributeSyntax attribute)
         => attribute.Name.ToString() == "TValue" || attribute.Name.ToString() == "TValueAttribute";
+
+    public static bool IsStructIdTemplate(this INamedTypeSymbol symbol)
+        => symbol.GetAttributes().Any(IsStructIdTemplate);
 
     public static bool IsStructIdTemplate(this AttributeData attribute)
         => attribute.AttributeClass?.Name == "TStructId" ||
