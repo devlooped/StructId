@@ -53,6 +53,9 @@ public static class CodeTemplate
 
         var tid = iface.TypeArguments.FirstOrDefault()?.ToFullName() ?? "string";
         var corens = iface.ContainingNamespace.ToFullName();
+        if (string.IsNullOrEmpty(corens))
+            corens = nameof(StructId);
+
         var targetNamespace = structId.ContainingNamespace != null && !structId.ContainingNamespace.IsGlobalNamespace ?
             structId.ContainingNamespace.ToDisplayString() : null;
 

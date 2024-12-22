@@ -2,7 +2,7 @@
 #nullable enable
 
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using StructId.Functional;
+using StructId;
 
 [TStructId]
 file partial record struct TSelf(Ulid Value) : INewable<TSelf, Ulid>

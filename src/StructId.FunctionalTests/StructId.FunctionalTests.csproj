@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\StructId.Package\StructId.props" />
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>

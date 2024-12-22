@@ -20,13 +20,13 @@ public record KnownTypes(Compilation Compilation)
     /// StructId.IStructId
     /// </summary>
     public INamedTypeSymbol? IStructId { get; } = Compilation
-        .GetAllTypes(true)
+        .GetAllTypes(includeReferenced: true)
         .FirstOrDefault(x => x.MetadataName == "IStructId" && x.IsGeneratedByStructId());
 
     /// <summary>
     /// StructId.IStructId{T}
     /// </summary>
     public INamedTypeSymbol? IStructIdT { get; } = Compilation
-        .GetAllTypes(true)
+        .GetAllTypes(includeReferenced: true)
         .FirstOrDefault(x => x.MetadataName == "IStructId`1" && x.IsGeneratedByStructId());
 }
