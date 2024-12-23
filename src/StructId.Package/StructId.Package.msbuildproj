@@ -4,7 +4,7 @@
     <PackageId>StructId</PackageId>
     <DevelopmentDependency>true</DevelopmentDependency>
     <Description>Stronly typed ids using readonly record structs and modern C# features.</Description>
-    <PackageTags>dotnet record struct typed id</PackageTags>
+    <PackageTags>dotnet record struct typed id strongly-typed dapper </PackageTags>
     <PackFolder>buildTransitive</PackFolder>
     <PackNone>true</PackNone>
   </PropertyGroup>
