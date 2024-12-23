@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Data;
 using System.Text.Json;
 using Dapper;
@@ -69,6 +70,19 @@ public partial class UlidToStringConverter : ValueConverter<Ulid, string>
 
 public class UlidTests
 {
+    [Fact]
+    public void TypeConverters()
+    {
+        var id = UlidId.New();
+        var converter = TypeDescriptor.GetConverter(id);
+
+        Assert.True(converter.CanConvertTo(typeof(string)));
+        Assert.True(converter.CanConvertFrom(typeof(string)));
+
+        var id2 = (UlidId?)converter.ConvertFromString(converter.ConvertToString(id)!);
+        Assert.Equal(id, id2);
+    }
+
     [Fact]
     public void JsonConversion()
     {
