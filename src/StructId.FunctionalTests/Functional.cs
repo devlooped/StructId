@@ -25,6 +25,19 @@ public record User(UserId Id, string Name, Wallet Wallet);
 public class FunctionalTests(ITestOutputHelper output)
 {
     [Fact]
+    public void TypeConverters()
+    {
+        var id = ProductId.New();
+        var converter = TypeDescriptor.GetConverter(id);
+
+        Assert.True(converter.CanConvertTo(typeof(string)));
+        Assert.True(converter.CanConvertFrom(typeof(string)));
+
+        var id2 = (ProductId?)converter.ConvertFromString(converter.ConvertToString(id)!);
+        Assert.Equal(id, id2);
+    }
+
+    [Fact]
     public void JsonConversion()
     {
         var product = new Product(ProductId.New(), "Product");
