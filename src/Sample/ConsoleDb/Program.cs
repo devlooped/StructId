@@ -1,6 +1,6 @@
-﻿using ConsoleDb;
-using Dapper;
+﻿using Dapper;
 using Microsoft.Data.Sqlite;
+using StructId;
 
 SQLitePCL.Batteries.Init();
 

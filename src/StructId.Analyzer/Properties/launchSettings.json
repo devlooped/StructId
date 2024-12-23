@@ -3,6 +3,10 @@
     "Roslyn": {
       "commandName": "DebugRoslynComponent",
       "targetProject": "..\\StructId.FunctionalTests\\StructId.FunctionalTests.csproj"
+    },
+    "MinimalApi": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Sample\\MinimalApi\\MinimalApi.csproj"
     }
   }
 }
