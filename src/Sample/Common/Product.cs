@@ -1,4 +1,6 @@
-﻿namespace Sample;
+﻿using StructId;
+
+namespace Sample;
 
 public record Product(ProductId Id, string Name);
 

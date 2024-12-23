@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Sample;
+using StructId;
 
 namespace MvcWebApplication.Controllers;
 
@@ -24,6 +25,6 @@ public class HomeController : Controller
     }
 }
 
-public readonly partial record struct UserId : IStructId<Guid>;
+public readonly partial record struct UserId : IStructId<Ulid>;
 
 public record User(UserId id, string Alias);

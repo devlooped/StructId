@@ -1,0 +1,36 @@
+<Project>
+  <Import Project="..\Directory.Build.targets" />
+
+  <PropertyGroup>
+    <AfterMicrosoftNETSdkTargets>$(AfterMicrosoftNETSdkTargets);$(MSBuildThisFileDirectory)..\StructId.Package\StructId.targets</AfterMicrosoftNETSdkTargets>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(FromSource)">
+    <PackageReference Remove="StructId" />
+    <PackageReference Include="Scriban" Version="5.12.1" GeneratePathProperty="true" />
+
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\StructId.Analyzer\StructId.Analyzer.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\StructId.CodeFix\StructId.CodeFix.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\StructId.Package\StructId.Package.msbuildproj" ReferenceOutputAssembly="false" />
+
+    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll" Condition="Exists('$(PkgScriban)/lib/netstandard2.0/Scriban.dll')" />
+  </ItemGroup>
+
+  <Target Name="FromSource" Condition="$(FromSource)" BeforeTargets="AddStructId">
+    <ItemGroup>
+      <!-- These would be added from the package-relative paths by the StructId.targets -->
+      <StructIdCompile Include="$(MSBuildThisFileDirectory)..\StructId\*.cs" />
+      <StructIdTemplates Include="$(MSBuildThisFileDirectory)..\StructId\Templates\*.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Templates should always be added by buildTransitive targets -->
+      <StructId Include="@(StructIdTemplates)" Link="StructId\Templates\%(StructIdTemplates.Filename)%(StructIdTemplates.Extension)" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(HasStructIdReference)' != 'false'">
+      <StructId Include="@(StructIdCompile)" Link="StructId\%(StructIdCompile.Filename)%(StructIdCompile.Extension)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
