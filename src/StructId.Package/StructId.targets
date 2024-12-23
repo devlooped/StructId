@@ -33,7 +33,7 @@
     </ItemGroup>
     <!-- Add final template items to project -->
     <ItemGroup>
-      <Compile Include="%(StructId.FullPath)" />
+      <Compile Include="%(StructId.FullPath)" NuGetPackageId="StructId" />
     </ItemGroup>
   </Target>
 
