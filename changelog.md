@@ -1,12 +1,36 @@
 # Changelog
 
+## [v1.0.0-rc](https://github.com/devlooped/StructId/tree/v1.0.0-rc) (2024-12-23)
+
+[Full Changelog](https://github.com/devlooped/StructId/compare/v1.0.0...v1.0.0-rc)
+
+## [v1.0.0](https://github.com/devlooped/StructId/tree/v1.0.0) (2024-12-23)
+
+[Full Changelog](https://github.com/devlooped/StructId/compare/v1.0.0-beta...v1.0.0)
+
+:sparkles: Implemented enhancements:
+
+- Annotate compiled templates with NuGetPackageId metadata [\#57](https://github.com/devlooped/StructId/pull/57) (@kzu)
+- Add legacy TypeConverter support from System.ComponentModel [\#55](https://github.com/devlooped/StructId/pull/55) (@kzu)
+- Drastically simply packing and namespace management [\#53](https://github.com/devlooped/StructId/pull/53) (@kzu)
+- Improve detection of IStructId namespace from compilation [\#52](https://github.com/devlooped/StructId/pull/52) (@kzu)
+
+:bug: Fixed bugs:
+
+- Fix issue when writing custom values to STJ [\#54](https://github.com/devlooped/StructId/pull/54) (@kzu)
+
+:twisted_rightwards_arrows: Merged:
+
+- Allow running samples from main solution for debugging [\#56](https://github.com/devlooped/StructId/pull/56) (@kzu)
+- Further improve docs and comment code for posterity [\#51](https://github.com/devlooped/StructId/pull/51) (@kzu)
+
 ## [v1.0.0-beta](https://github.com/devlooped/StructId/tree/v1.0.0-beta) (2024-12-21)
 
 [Full Changelog](https://github.com/devlooped/StructId/compare/v1.0.0-alpha...v1.0.0-beta)
 
 ## [v1.0.0-alpha](https://github.com/devlooped/StructId/tree/v1.0.0-alpha) (2024-12-21)
 
-[Full Changelog](https://github.com/devlooped/StructId/compare/04051d776cc03cf3889e36c86aa2fe4a8b51e307...v1.0.0-alpha)
+[Full Changelog](https://github.com/devlooped/StructId/compare/v0.1.0...v1.0.0-alpha)
 
 :sparkles: Implemented enhancements:
 
@@ -52,6 +76,10 @@
 - Refactor code templates processing, move more to compiled [\#33](https://github.com/devlooped/StructId/pull/33) (@kzu)
 - Improve usage of common namespace, more flexible TId processing [\#26](https://github.com/devlooped/StructId/pull/26) (@kzu)
 - Rename base class for generators for better semantics [\#20](https://github.com/devlooped/StructId/pull/20) (@kzu)
+
+## [v0.1.0](https://github.com/devlooped/StructId/tree/v0.1.0) (2024-11-22)
+
+[Full Changelog](https://github.com/devlooped/StructId/compare/04051d776cc03cf3889e36c86aa2fe4a8b51e307...v0.1.0)
 
 
 
