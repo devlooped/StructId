@@ -12,6 +12,8 @@ maximum performance, minimal memory allocation typed identifiers.
 
 ```csharp
 public readonly partial record struct UserId : IStructId<Guid>;
+// String-based ID
+public readonly partial record struct ProductId : IStructId;
 ```
 
 Unlike other such libraries for .NET, StructId introduces several unique features:
