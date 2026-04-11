@@ -10,11 +10,6 @@
     <GenerateDocumentationFile Condition="$(GenerateDocumentationFile) == '' and $(IsTestProject) == 'true'">false</GenerateDocumentationFile>
     <GenerateDocumentationFile Condition="$(GenerateDocumentationFile) == '' and $(MSBuildProjectName.Contains('Tests'))">false</GenerateDocumentationFile>
     <GenerateDocumentationFile Condition="$(GenerateDocumentationFile) == ''">true</GenerateDocumentationFile>
-
-    <PrepareProjectPropertiesDependsOn>
-      EnsureProjectInformation;
-      $(PrepareProjectPropertiesDependsOn)
-    </PrepareProjectPropertiesDependsOn>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(IsPackable)' == ''">
@@ -159,7 +154,7 @@
     <PropertyGroup Condition="'$(SourceRevisionId)' != ''">
       <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">$(SourceRevisionId)</RepositoryCommit>
       <RepositorySha Condition="'$(RepositorySha)' == ''">$(SourceRevisionId.Substring(0, 9))</RepositorySha>
-      <!-- This allows the commit label added to the InformationalVersion to be the short sha instead SourceControlBranch:) -->
+      <!-- This allows the commit label added to the InformationalVersion to be the short sha instead :) -->
       <SourceRevisionId>$(RepositorySha)</SourceRevisionId>
     </PropertyGroup>
 
@@ -170,11 +165,9 @@
 
     <PropertyGroup>
       <RepositoryRoot>@(_GitSourceRoot)</RepositoryRoot>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(RepositoryBranch)' == ''">
-      <_GitBranchName>%(_GitSourceRoot.BranchName)</_GitBranchName>
-      <RepositoryBranch>$(_GitBranchName.Replace('refs/heads/', '').Replace('refs/tags/', ''))</RepositoryBranch>
+      <!-- Only change if it wasn't just the default from Microsoft.NET.DefaultAssemblyInfo.targets -->
+      <ProductFromUrl Condition="'$(SourceControlInformationFeatureSupported)' == 'true'">$([System.IO.Path]::GetFileNameWithoutExtension($(PrivateRepositoryUrl)))</ProductFromUrl>
+      <Product Condition="'$(Product)' == '$(AssemblyName)' and '$(ProductFromUrl)' != ''">$(ProductFromUrl)</Product>
     </PropertyGroup>
 
   </Target>
@@ -185,9 +178,18 @@
           Condition="'$(SourceControlInformationFeatureSupported)' == 'true' And
                      '$(IsPackable)' == 'true'">
     <PropertyGroup>
-      <PackageProjectUrl Condition="'$(PackageProjectUrl)' == '' and '$(PublishRepositoryUrl)' == 'true'">$(RepositoryUrl)</PackageProjectUrl>
+      <PackageProjectUrl Condition="'$(PackageProjectUrl)' == '' and '$(PublishRepositoryUrl)' == 'true'">$(RepositoryUrl.Replace('.git', ''))</PackageProjectUrl>
       <PackageDescription>$(Description)</PackageDescription>
-      <PackageReleaseNotes Condition="'$(RepositoryUrl)' != '' and Exists('$(MSBuildThisFileDirectory)..\changelog.md')">$(RepositoryUrl)/blob/main/changelog.md</PackageReleaseNotes>
+      <PackageReleaseNotes Condition="'$(RepositoryUrl)' != '' and Exists('$(MSBuildThisFileDirectory)..\changelog.md')">$(RepositoryUrl.Replace('.git', ''))/blob/main/changelog.md</PackageReleaseNotes>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="UpdatePackageLicense" BeforeTargets="GetPackageMetadata;GenerateNuspec;Pack" Condition="'$(IsPackable)' == 'true'">
+    <!-- If project has a None item with PackagePath=OSMFEULA.txt -->
+    <PropertyGroup Condition="@(None -> WithMetadataValue('PackagePath', 'OSMFEULA.txt')) != ''">
+      <PackageLicenseExpression></PackageLicenseExpression>
+      <PackageLicenseFile>OSMFEULA.txt</PackageLicenseFile>
+      <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     </PropertyGroup>
   </Target>
 
