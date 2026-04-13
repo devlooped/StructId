@@ -7,6 +7,17 @@
 [![Build](https://github.com/devlooped/StructId/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/devlooped/StructId/actions)
 
 <!-- include https://github.com/devlooped/.github/raw/main/osmf.md -->
+## Open Source Maintenance Fee
+
+To ensure the long-term sustainability of this project, users of this package who generate 
+revenue must pay an [Open Source Maintenance Fee](https://opensourcemaintenancefee.org). 
+While the source code is freely available under the terms of the [License](license.txt), 
+this package and other aspects of the project require [adherence to the Maintenance Fee](osmfeula.txt).
+
+To pay the Maintenance Fee, [become a Sponsor](https://github.com/sponsors/devlooped) at the proper 
+OSMF tier. A single fee covers all of [Devlooped packages](https://www.nuget.org/profiles/Devlooped).
+
+<!-- https://github.com/devlooped/.github/raw/main/osmf.md -->
 <!-- #content -->
 An opinionated strongly-typed ID library that uses `readonly record struct` in C# for 
 maximum performance, minimal memory allocation typed identifiers.
