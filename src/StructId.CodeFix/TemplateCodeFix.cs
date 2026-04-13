@@ -49,10 +49,20 @@ public class TemplateCodeFix : CodeFixProvider
             var modifiers = declaration.Modifiers;
 
             if (!modifiers.Any(SyntaxKind.FileKeyword))
-                modifiers = modifiers.Insert(0, Token(SyntaxKind.FileKeyword));
+            {
+                var file = SpacedToken(SyntaxKind.FileKeyword);
+                if (modifiers.Count > 0)
+                {
+                    var firstModifier = modifiers[0];
+                    file = file.WithLeadingTrivia(firstModifier.LeadingTrivia);
+                    modifiers = modifiers.Replace(firstModifier, firstModifier.WithLeadingTrivia(TriviaList()));
+                }
+
+                modifiers = modifiers.Insert(0, file);
+            }
 
             if (!modifiers.Any(SyntaxKind.PartialKeyword))
-                modifiers = modifiers.Insert(1, Token(SyntaxKind.PartialKeyword));
+                modifiers = modifiers.Insert(1, SpacedToken(SyntaxKind.PartialKeyword));
 
             // Remove accessibility modifiers which are replaced by 'file' visibility
             if (modifiers.FirstOrDefault(x => x.IsKind(SyntaxKind.PublicKeyword)) is { } @public)
@@ -63,7 +73,10 @@ public class TemplateCodeFix : CodeFixProvider
                 modifiers = modifiers.Remove(@private);
 
             if (declaration.Identifier.Text != "TSelf")
-                declaration = declaration.WithIdentifier(Identifier("TSelf"));
+                declaration = declaration.WithIdentifier(Identifier(
+                    declaration.Identifier.LeadingTrivia,
+                    "TSelf",
+                    declaration.Identifier.TrailingTrivia));
 
             if (!declaration.IsKind(SyntaxKind.RecordStructDeclaration))
             {
@@ -71,8 +84,8 @@ public class TemplateCodeFix : CodeFixProvider
                     SyntaxKind.RecordStructDeclaration,
                     declaration.AttributeLists,
                     modifiers,
-                    Token(SyntaxKind.RecordKeyword),
-                    Token(SyntaxKind.StructKeyword),
+                    SpacedToken(SyntaxKind.RecordKeyword),
+                    SpacedToken(SyntaxKind.StructKeyword),
                     declaration.Identifier,
                     declaration.TypeParameterList,
                     declaration.ParameterList,
@@ -81,7 +94,8 @@ public class TemplateCodeFix : CodeFixProvider
                     declaration.OpenBraceToken,
                     declaration.Members,
                     declaration.CloseBraceToken,
-                    declaration.SemicolonToken);
+                    declaration.SemicolonToken)
+                    .WithTriviaFrom(original);
             }
             else if (modifiers != declaration.Modifiers)
             {
@@ -90,5 +104,8 @@ public class TemplateCodeFix : CodeFixProvider
 
             return Task.FromResult(document.WithSyntaxRoot(root.ReplaceNode(original, declaration)));
         }
+
+        static SyntaxToken SpacedToken(SyntaxKind kind)
+            => Token(TriviaList(), kind, TriviaList(Space));
     }
 }
