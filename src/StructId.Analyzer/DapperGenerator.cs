@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.Linq;
-using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Scriban;
 
@@ -15,7 +14,16 @@ public class DapperGenerator() : BaseGenerator(
 {
     static readonly Template template = Template.Parse(ThisAssembly.Resources.DapperExtensions.Text);
 
-    protected override IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source)
+    static string GetBuiltInHandlerName(StructIdModel model) => model.ValueTypeFullName switch
+    {
+        "System.String" or "string" => "String",
+        "System.Int32" or "int" => "Int32",
+        "System.Int64" or "long" => "Int64",
+        "System.Guid" or "Guid" => "Guid",
+        _ => model.ValueTypeName,
+    };
+
+    protected override IncrementalValuesProvider<StructIdModel> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<StructIdModel> source)
     {
         bool IsBuiltIn(string type) => type switch
         {
@@ -29,60 +37,72 @@ public class DapperGenerator() : BaseGenerator(
             _ => false
         };
 
-        var builtInHandled = source.Where(x => IsBuiltIn(x.TValue.ToFullName()));
+        var builtInHandled = source.Where(x => IsBuiltIn(x.ValueTypeFullName))
+            .WithTrackingName(TrackingNames.BuiltInHandled);
 
-        // Any type in the compilation that inherits from Dapper.SqlMapper.TypeHandler<T> is also picked up, 
-        // unless its a value template
-        var customHandlers = context.CompilationProvider
-            .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
-            .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName("Dapper.SqlMapper+TypeHandler`1")))
-            .Where(x => x.Left != null && x.Right != null &&
-                x.Left.Is(x.Right) &&
-                // Don't emit as plain handlers if they are id templates
-                !x.Left.GetAttributes().Any(a => a.IsValueTemplate()))
-            .Select((x, _) => x.Left)
-            .Collect();
+        // Any type in the compilation that inherits from Dapper.SqlMapper.TypeHandler<T> is also picked up,
+        // unless its a value template. Extract as (HandlerFullName, HandledValueTypeFullName) pairs.
+        var customHandlers = context.SyntaxProvider.CreateSyntaxProvider(
+                predicate: static (node, _) =>
+                    node is ClassDeclarationSyntax cds &&
+                    cds.BaseList?.Types.Any(t => t.Type.ToString().Contains("TypeHandler")) == true,
+                transform: static (ctx, ct) =>
+                {
+                    if (ctx.SemanticModel.GetDeclaredSymbol(ctx.Node, ct) is not INamedTypeSymbol symbol)
+                        return default((string, string)?);
 
-        // Non built-in value types can be templatized by using [TValue] templates. These would necessarily be
-        // file-local types which are not registered as handlers themselves but applied to each struct id TValue in turn.
+                    var typeHandlerType = ctx.SemanticModel.Compilation.GetTypeByMetadataName("Dapper.SqlMapper+TypeHandler`1");
+                    if (typeHandlerType == null || !symbol.Is(typeHandlerType))
+                        return null;
+
+                    if (symbol.GetAttributes().Any(a => a.IsValueTemplate()) ||
+                        symbol.ContainingType?.IsStructIdTemplate() == true)
+                        return null;
+
+                    // Find the T in TypeHandler<T> by walking the base type
+                    var baseType = symbol.BaseType;
+                    while (baseType != null)
+                    {
+                        if (baseType.OriginalDefinition.Equals(typeHandlerType, SymbolEqualityComparer.Default) &&
+                            baseType.TypeArguments.Length == 1)
+                        {
+                            return ((string, string)?)(symbol.ToFullName(), baseType.TypeArguments[0].ToFullName());
+                        }
+                        baseType = baseType.BaseType;
+                    }
+                    return null;
+                })
+            .Where(static x => x != null)
+            .Select(static (x, _) => x!.Value)
+            .Collect()
+            .WithTrackingName(TrackingNames.CustomHandlers);
+
+        // Non built-in value types can be templatized by using [TValue] templates
         var templatizedValues = context.SelectTemplatizedValues()
-            .Where(x => !IsBuiltIn(x.TValue.ToFullName()))
-            .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName("Dapper.SqlMapper+TypeHandler`1")))
-            .Where(x => x.Left.Template.TTemplate.Is(x.Right))
-            .Select((x, _) => x.Left);
+            .Where(x => !IsBuiltIn(x.ValueTypeFullName))
+            .Where(static x => x.IsSubtypeOf("Dapper.SqlMapper.TypeHandler<TValue>"))
+            .WithTrackingName(TrackingNames.TemplatizedValues);
 
-        // If there are custom type handlers for value types that are in turn used in struct ids, we need to register them 
-        // as handlers that pass-through to the value handler itself. 
+        // Match struct IDs to custom handlers or templatized handlers
         var customHandled = source
             .Combine(customHandlers.Combine(templatizedValues.Collect()))
-            .Select((x, _) =>
+            .Select(static (x, _) =>
             {
-                (TemplateArgs args, (ImmutableArray<INamedTypeSymbol> handlers, ImmutableArray<TemplatizedTValue> templatized)) = x;
+                var (model, (handlers, templatized)) = x;
 
-                var handlerType = args.ReferenceType.Construct(args.TValue);
-                var handler = handlers.FirstOrDefault(x => x.Is(handlerType, false));
+                // Try to find a direct custom handler for this value type
+                var handler = handlers.FirstOrDefault(h => h.Item2 == model.ValueTypeFullName);
+                if (handler.Item1 != null)
+                    return (Model: model, HandlerName: handler.Item1);
 
-                if (handler == null)
-                {
-                    var templated = templatized.Where(x => x.TValue.Equals(args.TValue, SymbolEqualityComparer.Default))
-                        .FirstOrDefault();
-                    // Consider templatized handlers that will be emitted as custom handlers too for registration.
-                    if (templated != null)
-                    {
-                        var identifier = templated.Template.Syntax.ApplyValue(templated.TValue)
-                           .DescendantNodes()
-                           .OfType<TypeDeclarationSyntax>()
-                           .First()
-                           .Identifier.Text;
+                // Try templatized handlers
+                var templated = templatized.FirstOrDefault(t => t.ValueTypeFullName == model.ValueTypeFullName);
+                if (templated.AppliedTypeName != null)
+                    return (Model: model, HandlerName: templated.AppliedTypeName);
 
-                        // Use lighter symbol since our template rendering only uses the type name.
-                        handler = new KnownTypeNameSymbol(identifier);
-                    }
-                }
-
-                return args with { ReferenceType = handler! };
+                return default;
             })
-            .Where(x => x.ReferenceType != null);
+            .Where(static x => x.HandlerName != null);
 
         context.RegisterSourceOutput(builtInHandled.Collect().Combine(customHandled.Collect()).Combine(templatizedValues.Collect()), GenerateHandlers);
 
@@ -90,33 +110,33 @@ public class DapperGenerator() : BaseGenerator(
         return source.Where(x => false);
     }
 
-    void GenerateHandlers(SourceProductionContext context, ((ImmutableArray<TemplateArgs> builtInHandled, ImmutableArray<TemplateArgs> customHandled), ImmutableArray<TemplatizedTValue> templatizedValues) source)
+    void GenerateHandlers(SourceProductionContext context, ((ImmutableArray<StructIdModel> builtInHandled, ImmutableArray<(StructIdModel Model, string HandlerName)> customHandled), ImmutableArray<TemplatizedValueOutput> templatizedValues) source)
     {
         var ((builtInHandled, customHandled), templatizedValues) = source;
         if (builtInHandled.Length == 0 && customHandled.Length == 0 && templatizedValues.Length == 0)
             return;
 
-        var structIdNamespace = builtInHandled.Concat(customHandled).Select(x => x.KnownTypes.StructIdNamespace).FirstOrDefault()
+        var structIdNamespace = builtInHandled.Select(x => x.CoreNamespace).Concat(customHandled.Select(x => x.Model.CoreNamespace)).FirstOrDefault()
             ?? "StructId";
 
         var templatizedHandlers = new HashSet<string>(templatizedValues
-            .Select(x => x.TypeName));
+            .Select(x => x.AppliedTypeName));
 
         var customValueHandlers = customHandled
-            .GroupBy(x => x.ReferenceType.ToFullName())
-            // Avoid registering twice the same templatized value handlers since they are 
+            .GroupBy(x => x.HandlerName)
+            // Avoid registering twice the same templatized value handlers since they are
             // already added at the end of the scriban rendering.
             .Where(x => !templatizedHandlers.Contains(x.Key))
-            .Select(x => new ValueHandlerModel(x.First().TValue.ToFullName(), x.Key))
+            .Select(x => new ValueHandlerModel(x.First().Model.ValueTypeFullName, x.Key))
             .ToArray();
 
         var model = new SelectorModel(
             structIdNamespace,
             // Built-in use the Name of the value type since it's used as a suffix for well-known provided implementations.
-            builtInHandled.Select(x => new StructIdModel(x.TSelf.ToFullName(), x.TValue.Name)),
-            customHandled.Select(x => new StructIdCustomModel(x.TSelf.ToFullName(), x.TValue.ToFullName(), x.ReferenceType.ToFullName())),
+            builtInHandled.Select(x => new DapperStructIdModel(x.TypeFullName, GetBuiltInHandlerName(x))),
+            customHandled.Select(x => new StructIdCustomModel(x.Model.TypeFullName, x.Model.ValueTypeFullName, x.HandlerName)),
             customValueHandlers,
-            templatizedValues.Select(x => new ValueHandlerModelCode(x)));
+            templatizedValues.Select(x => new ValueHandlerModelCode(x.ValueTypeFullName, x.AppliedTypeName, x.AppliedCode)));
 
         var output = template.Render(model, member => member.Name);
         context.AddSource($"DapperExtensions.cs", output.Trim());
@@ -131,203 +151,18 @@ public class DapperGenerator() : BaseGenerator(
     public static string RenderTemplatized(string @namespace, string tself, string tvalue, string thandler, string handlerCode)
         => template.Render(new SelectorModel(@namespace, [], [new(tself, tvalue, thandler)], [], [new(tvalue, thandler, handlerCode)]), member => member.Name).Trim();
 
-    record StructIdModel(string TSelf, string TValue);
+    record DapperStructIdModel(string TSelf, string TValue);
 
     record StructIdCustomModel(string TSelf, string TValue, string THandler);
 
     record ValueHandlerModel(string TValue, string THandler);
 
-    class ValueHandlerModelCode
-    {
-        public ValueHandlerModelCode(TemplatizedTValue template)
-        {
-            var declaration = template.Template.Syntax.ApplyValue(template.TValue)
-               .DescendantNodes()
-               .OfType<TypeDeclarationSyntax>()
-               .First();
-
-            TValue = template.TValue.ToFullName();
-            THandler = declaration.Identifier.Text;
-            Code = declaration.ToFullString();
-        }
-
-        public ValueHandlerModelCode(string tvalue, string thandler, string code)
-            => (TValue, THandler, Code) = (tvalue, thandler, code);
-
-        public string TValue { get; }
-        public string THandler { get; }
-        public string Code { get; }
-    }
+    record ValueHandlerModelCode(string TValue, string THandler, string Code);
 
     record SelectorModel(
         string Namespace,
-        IEnumerable<StructIdModel> Ids,
+        IEnumerable<DapperStructIdModel> Ids,
         IEnumerable<StructIdCustomModel> CustomIds,
         IEnumerable<ValueHandlerModel> CustomValues,
         IEnumerable<ValueHandlerModelCode> TemplatizedValueHandlers);
-
-#pragma warning disable RS1009 // Only internal implementations of this interface are allowed
-    class KnownTypeNameSymbol(string typeName) : INamedTypeSymbol
-#pragma warning restore RS1009 // Only internal implementations of this interface are allowed
-    {
-        public string Name => typeName;
-        public string ToDisplayString(SymbolDisplayFormat? format = null) => typeName;
-
-        public int Arity => throw new System.NotImplementedException();
-
-        public bool IsGenericType => throw new System.NotImplementedException();
-
-        public bool IsUnboundGenericType => throw new System.NotImplementedException();
-
-        public bool IsScriptClass => throw new System.NotImplementedException();
-
-        public bool IsImplicitClass => throw new System.NotImplementedException();
-
-        public bool IsComImport => throw new System.NotImplementedException();
-
-        public bool IsFileLocal => throw new System.NotImplementedException();
-
-        public IEnumerable<string> MemberNames => throw new System.NotImplementedException();
-
-        public ImmutableArray<ITypeParameterSymbol> TypeParameters => throw new System.NotImplementedException();
-
-        public ImmutableArray<ITypeSymbol> TypeArguments => throw new System.NotImplementedException();
-
-        public ImmutableArray<NullableAnnotation> TypeArgumentNullableAnnotations => throw new System.NotImplementedException();
-
-        public INamedTypeSymbol OriginalDefinition => throw new System.NotImplementedException();
-
-        public IMethodSymbol? DelegateInvokeMethod => throw new System.NotImplementedException();
-
-        public INamedTypeSymbol? EnumUnderlyingType => throw new System.NotImplementedException();
-
-        public INamedTypeSymbol ConstructedFrom => throw new System.NotImplementedException();
-
-        public ImmutableArray<IMethodSymbol> InstanceConstructors => throw new System.NotImplementedException();
-
-        public ImmutableArray<IMethodSymbol> StaticConstructors => throw new System.NotImplementedException();
-
-        public ImmutableArray<IMethodSymbol> Constructors => throw new System.NotImplementedException();
-
-        public ISymbol? AssociatedSymbol => throw new System.NotImplementedException();
-
-        public bool MightContainExtensionMethods => throw new System.NotImplementedException();
-
-        public INamedTypeSymbol? TupleUnderlyingType => throw new System.NotImplementedException();
-
-        public ImmutableArray<IFieldSymbol> TupleElements => throw new System.NotImplementedException();
-
-        public bool IsSerializable => throw new System.NotImplementedException();
-
-        public INamedTypeSymbol? NativeIntegerUnderlyingType => throw new System.NotImplementedException();
-
-        public TypeKind TypeKind => throw new System.NotImplementedException();
-
-        public INamedTypeSymbol? BaseType => throw new System.NotImplementedException();
-
-        public ImmutableArray<INamedTypeSymbol> Interfaces => throw new System.NotImplementedException();
-
-        public ImmutableArray<INamedTypeSymbol> AllInterfaces => throw new System.NotImplementedException();
-
-        public bool IsReferenceType => throw new System.NotImplementedException();
-
-        public bool IsValueType => throw new System.NotImplementedException();
-
-        public bool IsAnonymousType => throw new System.NotImplementedException();
-
-        public bool IsTupleType => throw new System.NotImplementedException();
-
-        public bool IsNativeIntegerType => throw new System.NotImplementedException();
-
-        public SpecialType SpecialType => throw new System.NotImplementedException();
-
-        public bool IsRefLikeType => throw new System.NotImplementedException();
-
-        public bool IsUnmanagedType => throw new System.NotImplementedException();
-
-        public bool IsReadOnly => throw new System.NotImplementedException();
-
-        public bool IsRecord => throw new System.NotImplementedException();
-
-        public NullableAnnotation NullableAnnotation => throw new System.NotImplementedException();
-
-        public bool IsNamespace => throw new System.NotImplementedException();
-
-        public bool IsType => throw new System.NotImplementedException();
-
-        public SymbolKind Kind => throw new System.NotImplementedException();
-
-        public string Language => throw new System.NotImplementedException();
-
-        public string MetadataName => throw new System.NotImplementedException();
-
-        public int MetadataToken => throw new System.NotImplementedException();
-
-        public ISymbol ContainingSymbol => throw new System.NotImplementedException();
-
-        public IAssemblySymbol ContainingAssembly => throw new System.NotImplementedException();
-
-        public IModuleSymbol ContainingModule => throw new System.NotImplementedException();
-
-        public INamedTypeSymbol ContainingType => throw new System.NotImplementedException();
-
-        public INamespaceSymbol ContainingNamespace => throw new System.NotImplementedException();
-
-        public bool IsDefinition => throw new System.NotImplementedException();
-
-        public bool IsStatic => throw new System.NotImplementedException();
-
-        public bool IsVirtual => throw new System.NotImplementedException();
-
-        public bool IsOverride => throw new System.NotImplementedException();
-
-        public bool IsAbstract => throw new System.NotImplementedException();
-
-        public bool IsSealed => throw new System.NotImplementedException();
-
-        public bool IsExtern => throw new System.NotImplementedException();
-
-        public bool IsImplicitlyDeclared => throw new System.NotImplementedException();
-
-        public bool CanBeReferencedByName => throw new System.NotImplementedException();
-
-        public ImmutableArray<Location> Locations => throw new System.NotImplementedException();
-
-        public ImmutableArray<SyntaxReference> DeclaringSyntaxReferences => throw new System.NotImplementedException();
-
-        public Accessibility DeclaredAccessibility => throw new System.NotImplementedException();
-
-        public bool HasUnsupportedMetadata => throw new System.NotImplementedException();
-
-        ITypeSymbol ITypeSymbol.OriginalDefinition => throw new System.NotImplementedException();
-
-        ISymbol ISymbol.OriginalDefinition => throw new System.NotImplementedException();
-
-        public void Accept(SymbolVisitor visitor) => throw new System.NotImplementedException();
-        public TResult? Accept<TResult>(SymbolVisitor<TResult> visitor) => throw new System.NotImplementedException();
-        public TResult Accept<TArgument, TResult>(SymbolVisitor<TArgument, TResult> visitor, TArgument argument) => throw new System.NotImplementedException();
-        public INamedTypeSymbol Construct(params ITypeSymbol[] typeArguments) => throw new System.NotImplementedException();
-        public INamedTypeSymbol Construct(ImmutableArray<ITypeSymbol> typeArguments, ImmutableArray<NullableAnnotation> typeArgumentNullableAnnotations) => throw new System.NotImplementedException();
-        public INamedTypeSymbol ConstructUnboundGenericType() => throw new System.NotImplementedException();
-        public bool Equals(ISymbol? other, SymbolEqualityComparer equalityComparer) => throw new System.NotImplementedException();
-        public bool Equals(ISymbol? other) => throw new System.NotImplementedException();
-        public ISymbol? FindImplementationForInterfaceMember(ISymbol interfaceMember) => throw new System.NotImplementedException();
-        public ImmutableArray<AttributeData> GetAttributes() => throw new System.NotImplementedException();
-        public string? GetDocumentationCommentId() => throw new System.NotImplementedException();
-        public string? GetDocumentationCommentXml(CultureInfo? preferredCulture = null, bool expandIncludes = false, CancellationToken cancellationToken = default) => throw new System.NotImplementedException();
-        public ImmutableArray<ISymbol> GetMembers() => throw new System.NotImplementedException();
-        public ImmutableArray<ISymbol> GetMembers(string name) => throw new System.NotImplementedException();
-        public ImmutableArray<CustomModifier> GetTypeArgumentCustomModifiers(int ordinal) => throw new System.NotImplementedException();
-        public ImmutableArray<INamedTypeSymbol> GetTypeMembers() => throw new System.NotImplementedException();
-        public ImmutableArray<INamedTypeSymbol> GetTypeMembers(string name) => throw new System.NotImplementedException();
-        public ImmutableArray<INamedTypeSymbol> GetTypeMembers(string name, int arity) => throw new System.NotImplementedException();
-        public ImmutableArray<SymbolDisplayPart> ToDisplayParts(NullableFlowState topLevelNullability, SymbolDisplayFormat? format = null) => throw new System.NotImplementedException();
-        public ImmutableArray<SymbolDisplayPart> ToDisplayParts(SymbolDisplayFormat? format = null) => throw new System.NotImplementedException();
-        public string ToDisplayString(NullableFlowState topLevelNullability, SymbolDisplayFormat? format = null) => throw new System.NotImplementedException();
-        public ImmutableArray<SymbolDisplayPart> ToMinimalDisplayParts(SemanticModel semanticModel, NullableFlowState topLevelNullability, int position, SymbolDisplayFormat? format = null) => throw new System.NotImplementedException();
-        public ImmutableArray<SymbolDisplayPart> ToMinimalDisplayParts(SemanticModel semanticModel, int position, SymbolDisplayFormat? format = null) => throw new System.NotImplementedException();
-        public string ToMinimalDisplayString(SemanticModel semanticModel, NullableFlowState topLevelNullability, int position, SymbolDisplayFormat? format = null) => throw new System.NotImplementedException();
-        public string ToMinimalDisplayString(SemanticModel semanticModel, int position, SymbolDisplayFormat? format = null) => throw new System.NotImplementedException();
-        public ITypeSymbol WithNullableAnnotation(NullableAnnotation nullableAnnotation) => throw new System.NotImplementedException();
-    }
 }

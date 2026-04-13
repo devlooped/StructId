@@ -4,7 +4,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Scriban;
-using static StructId.AnalysisExtensions;
 
 namespace StructId;
 
@@ -40,48 +39,66 @@ public class EntityFrameworkGenerator() : BaseGenerator(
         ["System.Object"] = "object",
     };
 
+    // Combined set of both keys (System.Int32) and values (int) for efficient lookup
+    static readonly HashSet<string> builtInEFTypes = new(builtInTypesMap.Keys.Concat(builtInTypesMap.Values));
+
     static readonly Template selectorTemplate = Template.Parse(ThisAssembly.Resources.EntityFrameworkSelector.Text);
 
-    SyntaxNode? idTemplate;
-    SyntaxNode? parsableIdTemplate;
-
-    protected override IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source)
+    protected override IncrementalValuesProvider<StructIdModel> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<StructIdModel> source)
     {
-        var converters = context.CompilationProvider
-            .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
-            .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName(ValueConverterType)))
-            .Where(x => x.Left != null && x.Right != null &&
-                x.Left.Is(x.Right) &&
-                !x.Left.IsUnboundGenericType &&
-                x.Left.BaseType?.TypeArguments.Length == 2 &&
-                // Don't emit as plain converters if they are value templates
-                !x.Left.GetAttributes().Any(a => a.IsValueTemplate()))
-            .Select((x, _) => x.Left)
-            .Collect();
+        // Discover custom ValueConverter<TModel,TProvider> types via syntax predicate
+        var converters = context.SyntaxProvider.CreateSyntaxProvider(
+                predicate: static (node, _) =>
+                    node is ClassDeclarationSyntax cds &&
+                    cds.BaseList?.Types.Any(t => t.Type.ToString().Contains("ValueConverter")) == true,
+                transform: static (ctx, ct) =>
+                {
+                    if (ctx.SemanticModel.GetDeclaredSymbol(ctx.Node, ct) is not INamedTypeSymbol symbol || symbol.IsUnboundGenericType)
+                        return default((string, string, string)?);
 
+                    var converterType = ctx.SemanticModel.Compilation.GetTypeByMetadataName(ValueConverterType);
+                    if (converterType == null || !symbol.Is(converterType))
+                        return null;
+
+                    if (symbol.GetAttributes().Any(a => a.IsValueTemplate()) ||
+                        symbol.ContainingType?.IsStructIdTemplate() == true)
+                        return null;
+
+                    if (symbol.BaseType?.TypeArguments.Length != 2)
+                        return null;
+
+                    return ((string, string, string)?)(
+                        symbol.BaseType.TypeArguments[0].ToFullName(),
+                        symbol.BaseType.TypeArguments[1].ToFullName(),
+                        symbol.ToFullName());
+                })
+            .Where(static x => x != null)
+            .Select(static (x, _) => x!.Value)
+            .Collect()
+            .WithTrackingName(TrackingNames.Converters);
+
+        // Templatized value converters from [TValue] templates
         var templatizedValues = context.SelectTemplatizedValues()
-            .Combine(context.CompilationProvider.Select((x, _) => x.GetTypeByMetadataName(ValueConverterType)))
-            .Where(x => x.Left.Template.TTemplate.Is(x.Right))
-            .Select((x, _) => x.Left);
+            .Where(static x => x.IsSubtypeOf("Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<TValue,TValue>"));
 
         context.RegisterSourceOutput(source.Collect().Combine(converters).Combine(templatizedValues.Collect()), GenerateValueSelector);
 
         return base.OnInitialize(context, source);
     }
 
-    protected override SyntaxNode SelectTemplate(TemplateArgs args)
+    protected override string SelectTemplate(StructIdModel model)
     {
-        if (args.TValue.Equals(args.KnownTypes.String, SymbolEqualityComparer.Default) ||
-            builtInTypesMap.ContainsKey(args.TValue.ToDisplayString(NamespacedTypeName)))
-            return idTemplate ??= CodeTemplate.Parse(ThisAssembly.Resources.Templates.EntityFramework.Text, args.KnownTypes.Compilation.GetParseOptions());
-        else if (args.TValue.Is(args.KnownTypes.Compilation.GetTypeByMetadataName("System.IParsable`1")) &&
-                 args.TValue.Is(args.KnownTypes.Compilation.GetTypeByMetadataName("System.IFormattable")))
-            return parsableIdTemplate ??= CodeTemplate.Parse(ThisAssembly.Resources.Templates.EntityFrameworkParsable.Text, args.KnownTypes.Compilation.GetParseOptions());
-        else
-            return idTemplate ??= CodeTemplate.Parse(ThisAssembly.Resources.Templates.EntityFramework.Text, args.KnownTypes.Compilation.GetParseOptions());
+        if (builtInEFTypes.Contains(model.ValueTypeFullName))
+            return ThisAssembly.Resources.Templates.EntityFramework.Text;
+
+        if (model.ValueTypeAllInterfaces.Contains("System.IParsable<T>") &&
+            model.ValueTypeAllInterfaces.Contains("System.IFormattable"))
+            return ThisAssembly.Resources.Templates.EntityFrameworkParsable.Text;
+
+        return ThisAssembly.Resources.Templates.EntityFramework.Text;
     }
 
-    void GenerateValueSelector(SourceProductionContext context, ((ImmutableArray<TemplateArgs>, ImmutableArray<INamedTypeSymbol>), ImmutableArray<TemplatizedTValue>) args)
+    void GenerateValueSelector(SourceProductionContext context, ((ImmutableArray<StructIdModel>, ImmutableArray<(string TModel, string TProvider, string TConverter)>), ImmutableArray<TemplatizedValueOutput>) args)
     {
         ((var structIds, var customConverters), var templatizedConverters) = args;
 
@@ -89,55 +106,30 @@ public class EntityFrameworkGenerator() : BaseGenerator(
             return;
 
         var model = new SelectorModel(
-            structIds.Select(x => new StructIdModel(x.TSelf.ToFullName(),
-                // The TValue is used as the ProviderClrType for EF, which should be either a built-in 
-                // supported type or a parsable one. We default to using the type as-is for future-proofing, 
-                // but that may be subject to change.
-                !builtInTypesMap.ContainsKey(x.TValue.ToDisplayString(NamespacedTypeName))
-                ? x.TValue.Is(x.KnownTypes.Compilation.GetTypeByMetadataName("System.IParsable`1")) &&
-                  x.TValue.Is(x.KnownTypes.Compilation.GetTypeByMetadataName("System.IFormattable"))
-                  // parsable+formattable will result in the parsable template being used as the converter
-                  // so we use string as the underlying EF type.
-                  ? "string" : x.TValue.ToFullName()
-                : x.TValue.ToFullName())),
-            customConverters.Select(x => new ConverterModel(x.BaseType!.TypeArguments[0].ToFullName(), x.BaseType!.TypeArguments[1].ToFullName(), x.ToFullName())),
+            structIds.Select(x => new EFStructIdModel(x.TypeFullName,
+                !builtInEFTypes.Contains(x.ValueTypeFullName)
+                ? x.ValueTypeAllInterfaces.Contains("System.IParsable<T>") &&
+                  x.ValueTypeAllInterfaces.Contains("System.IFormattable")
+                  ? "string" : x.ValueTypeFullName
+                : x.ValueTypeFullName)),
+            customConverters.Select(x => new ConverterModel(x.TModel, x.TProvider, x.TConverter)),
             templatizedConverters
-                .Where(x => !builtInTypesMap.ContainsKey(x.TValue.ToDisplayString(NamespacedTypeName)))
-                .Select(x => new TemplatizedModel(x)));
+                .Where(x => !builtInEFTypes.Contains(x.ValueTypeFullName))
+                .Select(x => new TemplatizedModel(x.ValueTypeFullName, x.AppliedTypeName, x.AppliedCode)));
 
         var output = selectorTemplate.Render(model, member => member.Name);
 
         context.AddSource($"ValueConverterSelector.cs", output);
     }
 
-    record StructIdModel(string TSelf, string TValueType)
+    record EFStructIdModel(string TSelf, string TValueType)
     {
         public string TValue => builtInTypesMap.TryGetValue(TValueType, out var value) ? value : TValueType;
     }
 
     record ConverterModel(string TModel, string TProvider, string TConverter);
 
-    class TemplatizedModel
-    {
-        public TemplatizedModel(TemplatizedTValue template)
-        {
-            var declaration = template.Template.Syntax.ApplyValue(template.TValue)
-               .DescendantNodes()
-               .OfType<TypeDeclarationSyntax>()
-               .First();
+    record TemplatizedModel(string TModel, string TConverter, string Code);
 
-            TModel = template.TValue.ToFullName();
-            TConverter = declaration.Identifier.Text;
-            Code = declaration.ToFullString();
-        }
-
-        public TemplatizedModel(string tvalue, string tconverter, string code)
-            => (TModel, TConverter, Code) = (tvalue, tconverter, code);
-
-        public string TModel { get; }
-        public string TConverter { get; }
-        public string Code { get; }
-    }
-
-    record SelectorModel(IEnumerable<StructIdModel> Ids, IEnumerable<ConverterModel> Converters, IEnumerable<TemplatizedModel> Templatized);
+    record SelectorModel(IEnumerable<EFStructIdModel> Ids, IEnumerable<ConverterModel> Converters, IEnumerable<TemplatizedModel> Templatized);
 }

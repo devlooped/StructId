@@ -149,6 +149,41 @@ public class TemplateGeneratorTests
         Assert.Equal(0, userId.GetMethod("CompareTo")!.Invoke(user1, [user2]));
     }
 
+    [Fact]
+    public async Task StringStructId_DoesNotGenerateTypedTemplates()
+    {
+        var test = new GeneratorTest<TemplatedGenerator>
+        {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
+            TestBehaviors = TestBehaviors.SkipGeneratedSourcesCheck,
+            TestState =
+            {
+                Sources =
+                {
+                    """
+                    using StructId;
+
+                    public readonly partial record struct WalletId(string Value) : IStructId;
+                    """,
+                    ThisAssembly.Resources.StructId.Templates.Conversion.Text,
+                    ThisAssembly.Resources.StructId.Templates.ConversionT.Text,
+                    ThisAssembly.Resources.StructId.Templates.Newable.Text,
+                    ThisAssembly.Resources.StructId.Templates.NewableT.Text,
+                },
+            },
+        }.WithAnalyzerDefaults();
+
+        await test.RunAsync();
+
+        var generatedTrees = test.Compilation!.SyntaxTrees
+            .Where(x => x.FilePath.Contains(nameof(TemplatedGenerator), StringComparison.Ordinal))
+            .ToImmutableArray();
+
+        Assert.Equal(2, generatedTrees.Length);
+        Assert.Contains(generatedTrees, x => x.ToString().Contains("INewable<WalletId>", StringComparison.Ordinal));
+        Assert.DoesNotContain(generatedTrees, x => x.ToString().Contains("INewable<WalletId, string>", StringComparison.Ordinal));
+    }
+
     class GeneratorTest<TSourceGenerator> : CSharpSourceGeneratorTest<TSourceGenerator, DefaultVerifier>
         where TSourceGenerator : new()
     {

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis;
 
 namespace StructId;
 
@@ -13,7 +11,6 @@ public class ConstructorGenerator() : BaseGenerator(
 {
     // NOTE: since we only emit the ctor if the struct doesn't already have one, 
     // we cannot switch this to the simpler compiled templates, which don't have conditional logic
-    protected override IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source)
-        => base.OnInitialize(context, source.Where(x
-            => x.TSelf.DeclaringSyntaxReferences.Select(r => r.GetSyntax()).OfType<TypeDeclarationSyntax>().All(s => s.ParameterList == null)));
+    protected override IncrementalValuesProvider<StructIdModel> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<StructIdModel> source)
+        => base.OnInitialize(context, source.Where(x => !x.HasParameterList));
 }
