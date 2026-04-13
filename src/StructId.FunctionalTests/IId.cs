@@ -12,5 +12,5 @@ namespace StructId;
 /// </summary>
 public interface IId
 {
-    public Guid Id { get; }
+    Guid Id { get; }
 }
