@@ -113,9 +113,9 @@
 	weak
 [file "src/Directory.Build.targets"]
 	url = https://github.com/devlooped/oss/blob/main/src/Directory.Build.targets
-	sha = 4b84c540df6f37c30fb38df7947d79871c34f036
+	sha = 083a37bd9307ec820bac6ee3c7384083151d36d8
 
-	etag = 09ce6b3f9521f8eedc44b77e7b7eaf90bf5df36e1ffb7f78ca27658812180977
+	etag = 907682e5632a2ba430357e6e042a4ca33cb8c94a3a215d3091aa03f5958a4877
 	weak
 [file "src/Sample/MinimalApi/Ipsum.cs"]
 	url = https://github.com/devlooped/catbag/blob/main/System/Ipsum.cs
