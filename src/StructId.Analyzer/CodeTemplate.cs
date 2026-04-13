@@ -29,6 +29,15 @@ public static class CodeTemplate
             applied.ToFullString();
     }
 
+    public static string Apply(string template, string typeName, string valueType, string? targetNamespace, string coreNamespace = "StructId", bool normalizeWhitespace = false)
+    {
+        var applied = ApplyImpl(Parse(template), typeName, valueType, targetNamespace, coreNamespace);
+
+        return normalizeWhitespace ?
+            applied.NormalizeWhitespace().ToFullString() :
+            applied.ToFullString();
+    }
+
     public static string Apply(string template, string valueType, bool normalizeWhitespace = false)
     {
         var applied = ApplyValueImpl(Parse(template), valueType);

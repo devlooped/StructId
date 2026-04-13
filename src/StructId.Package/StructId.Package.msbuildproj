@@ -9,7 +9,7 @@
     <PackNone>true</PackNone>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NuGetizer" Version="1.2.3" />
+    <PackageReference Include="NuGetizer" Version="1.4.7" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StructId.Analyzer\StructId.Analyzer.csproj" />

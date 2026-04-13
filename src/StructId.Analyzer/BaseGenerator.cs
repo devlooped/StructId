@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace StructId;
@@ -19,66 +20,52 @@ public enum ReferenceCheck
 
 public abstract class BaseGenerator(string referenceType, string stringTemplate, string typeTemplate, ReferenceCheck referenceCheck = ReferenceCheck.ValueIsType) : IIncrementalGenerator
 {
-    SyntaxNode? stringSyntax;
-    SyntaxNode? typedSyntax;
-
-    protected record struct TemplateArgs(INamedTypeSymbol TSelf, INamedTypeSymbol TValue, INamedTypeSymbol ReferenceType, KnownTypes KnownTypes);
-
     public virtual void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var known = context.CompilationProvider
-            .Select((x, _) => new KnownTypes(x));
+        // Get the reference type's original definition display name for matching
+        var refType = context.CompilationProvider
+            .Select((x, _) => x.GetTypeByMetadataName(referenceType)?.OriginalDefinition.ToFullName())
+            .WithTrackingName(TrackingNames.ReferenceType);
 
-        // Locate the required type
-        var types = context.CompilationProvider
-            .Select((x, _) => x.GetTypeByMetadataName(referenceType));
+        // Discover struct IDs via syntax predicate + semantic transform
+        var ids = context.SyntaxProvider.CreateSyntaxProvider(
+            predicate: static (node, _) =>
+                node is RecordDeclarationSyntax rds &&
+                rds.BaseList?.Types.Any(t => t.Type.ToString().Contains("IStructId")) == true,
+            transform: static (ctx, ct) =>
+                ctx.SemanticModel.GetDeclaredSymbol(ctx.Node, ct) is INamedTypeSymbol symbol ? ModelExtractors.ExtractStructIdModel(symbol) : null)
+            .Where(static x => x != null)
+            .Select(static (x, _) => x!.Value)
+            .WithTrackingName(TrackingNames.StructIds);
 
-        var ids = context.CompilationProvider
-            .SelectMany((x, _) => x.Assembly.GetAllTypes().OfType<INamedTypeSymbol>())
-            .Where(x => x.IsStructId())
-            .Where(x => x.IsPartial());
+        // Combine with reference type existence check
+        var combined = ids.Combine(refType)
+            .Where(static x => x.Right != null);
 
-        var combined = ids.Combine(types)
-            // NOTE: we never generate for compilations that don't have the specified value interface type
-            .Where(x => x.Right != null)
-            .Combine(known)
-            .Select((x, _) =>
-            {
-                var ((structId, referenceType), known) = x;
-
-                // The value type is either a generic type argument for IStructId<T>, or the string type 
-                // for the non-generic IStructId
-                var valueType = structId.AllInterfaces
-                    .First(x => x.Name == "IStructId")
-                    .TypeArguments.OfType<INamedTypeSymbol>().FirstOrDefault() ??
-                    known.String;
-
-                return new TemplateArgs(structId, valueType, referenceType!, known);
-            });
-
+        // For ValueIsType, additionally filter to struct ids whose value type implements the reference type
         if (referenceCheck == ReferenceCheck.ValueIsType)
-            combined = combined.Where(x => x.TValue.Is(x.ReferenceType));
+            combined = combined.Where(static x => x.Left.ValueTypeAllInterfaces.Contains(x.Right!));
 
-        combined = OnInitialize(context, combined);
+        var models = combined
+            .Select(static (x, _) => x.Left)
+            .WithTrackingName(TrackingNames.Combined);
 
-        context.RegisterImplementationSourceOutput(combined, GenerateCode);
+        models = OnInitialize(context, models);
+
+        context.RegisterImplementationSourceOutput(models, GenerateCode);
     }
 
-    protected virtual IncrementalValuesProvider<TemplateArgs> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<TemplateArgs> source) => source;
+    protected virtual IncrementalValuesProvider<StructIdModel> OnInitialize(IncrementalGeneratorInitializationContext context, IncrementalValuesProvider<StructIdModel> source) => source;
 
-    void GenerateCode(SourceProductionContext context, TemplateArgs args)
-        => AddFromTemplate(context, args, $"{args.TSelf.ToFileName()}.cs", SelectTemplate(args));
+    void GenerateCode(SourceProductionContext context, StructIdModel model)
+        => AddFromTemplate(context, model, $"{model.FileName}.cs", SelectTemplate(model));
 
-    protected virtual SyntaxNode SelectTemplate(TemplateArgs args)
-        => args.TValue.Equals(args.KnownTypes.String, SymbolEqualityComparer.Default) ?
-            (stringSyntax ??= CodeTemplate.Parse(stringTemplate, args.KnownTypes.Compilation.GetParseOptions())) :
-            (typedSyntax ??= CodeTemplate.Parse(typeTemplate, args.KnownTypes.Compilation.GetParseOptions()));
+    protected virtual string SelectTemplate(StructIdModel model)
+        => model.IsStringValue ? stringTemplate : typeTemplate;
 
-    protected static void AddFromTemplate(SourceProductionContext context, TemplateArgs args, string hintName, SyntaxNode template)
+    protected static void AddFromTemplate(SourceProductionContext context, StructIdModel model, string hintName, string templateText)
     {
-        var applied = template.Apply(args.TSelf);
-        var output = applied.ToFullString();
-
+        var output = CodeTemplate.Apply(templateText, model.TypeName, model.ValueTypeFullName, model.Namespace, model.CoreNamespace);
         context.AddSource(hintName, SourceText.From(output, Encoding.UTF8));
     }
 }

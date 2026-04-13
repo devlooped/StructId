@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace StructId;
+﻿namespace StructId;
 
 /// <summary>
 /// Showcases a custom interface that we want implemented by all 

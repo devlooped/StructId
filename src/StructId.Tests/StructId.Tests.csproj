@@ -19,7 +19,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="1.1.2" />
     <PackageReference Include="ThisAssembly.Resources" Version="2.0.10" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Scriban" Version="5.12.1" GeneratePathProperty="true" />
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Ulid" Version="1.3.4" />
   </ItemGroup>
@@ -33,8 +32,6 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Xunit.Abstractions" />
-  
-    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll" Condition="Exists('$(PkgScriban)/lib/netstandard2.0/Scriban.dll')" />
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />

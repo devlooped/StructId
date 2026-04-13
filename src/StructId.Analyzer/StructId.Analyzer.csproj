@@ -7,13 +7,15 @@
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <PackageScribanIncludeSource>true</PackageScribanIncludeSource>
+    <PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Pack="false" Version="4.8.0" />
-    <PackageReference Include="NuGetizer" Version="1.2.4" />
-    <PackageReference Include="PolySharp" PrivateAssets="All" Version="1.15.0" />
-    <PackageReference Include="Scriban" Version="5.12.1" PrivateAssets="all" />
+    <PackageReference Include="NuGetizer" Version="1.4.7" />
+    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="All" />
+    <PackageReference Include="Scriban" Version="7.1.0" IncludeAssets="Build" />
     <PackageReference Include="ThisAssembly.AssemblyInfo" Version="2.0.10" PrivateAssets="all" />
     <PackageReference Include="ThisAssembly.Project" Version="2.0.10" PrivateAssets="all" />
     <PackageReference Include="ThisAssembly.Resources" Version="2.0.10" PrivateAssets="all" />
@@ -24,6 +26,7 @@
     <TemplateCode Include="..\StructId\Templates\*.cs" Link="StructId\%(Filename)%(Extension)" />
     <EmbeddedResource Include="*.sbn" Kind="Text" />
     <UpToDateCheck Include="@(TemplateCode);@(EmbeddedResource)" />
+    <InternalsVisibleTo Include="StructId.Tests" />
   </ItemGroup>
 
   <Target Name="CopyTemplateCode" Inputs="@(TemplateCode)" Outputs="@(TemplateCode -> '$(BaseIntermediateOutputPath)Templates\%(Filename).txt')">

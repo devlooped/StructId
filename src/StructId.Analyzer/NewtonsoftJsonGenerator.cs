@@ -15,21 +15,30 @@ public class NewtonsoftJsonGenerator() : BaseGenerator(
     {
         base.Initialize(context);
 
+        // Extract just the namespace string from compilation — no ISymbol in pipeline value
         var source = context.CompilationProvider
-            .Select((x, _) => (new KnownTypes(x), x.GetTypeByMetadataName("Newtonsoft.Json.JsonConverter`1")));
+            .Select((x, _) =>
+            {
+                var converter = x.GetTypeByMetadataName("Newtonsoft.Json.JsonConverter`1");
+                if (converter == null)
+                    return default((string?, bool));
+                var known = new KnownTypes(x);
+                return (known.StructIdNamespace, true);
+            })
+            .WithTrackingName(TrackingNames.NewtonsoftSource);
 
         context.RegisterSourceOutput(
             source,
             (context, source) =>
             {
-                (var known, var converter) = source;
-                if (converter == null)
+                var (structIdNamespace, exists) = source;
+                if (!exists || structIdNamespace == null)
                     return;
 
                 context.AddSource("NewtonsoftJsonConverter.cs", SourceText.From(
                     ThisAssembly.Resources.Templates.NewtonsoftJsonConverter_1.Text
-                    .Replace("namespace StructId;", $"namespace {known.StructIdNamespace};")
-                    .Replace("using StructId;", $"using {known.StructIdNamespace};"),
+                    .Replace("namespace StructId;", $"namespace {structIdNamespace};")
+                    .Replace("using StructId;", $"using {structIdNamespace};"),
                     Encoding.UTF8));
             });
     }

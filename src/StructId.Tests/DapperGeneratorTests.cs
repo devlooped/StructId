@@ -43,6 +43,40 @@ public class DapperGeneratorTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task GenerateStringHandler()
+    {
+        var test = new StructIdGeneratorTest<DapperGenerator>("UserId", "string")
+        {
+            SolutionTransforms =
+            {
+                (solution, projectId) => solution
+                    .GetProject(projectId)?
+                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Dapper.DbString).Assembly.ManifestModule.FullyQualifiedName))
+                    .Solution ?? solution
+            },
+            TestState =
+            {
+                Sources =
+                {
+                    """
+                    using StructId;
+
+                    public readonly partial record struct UserId(string Value): IStructId;
+                    """,
+                },
+                GeneratedSources =
+                {
+                    (typeof(DapperGenerator), "DapperExtensions.cs",
+                    DapperGenerator.Render("StructId", "UserId", "String"),
+                    Encoding.UTF8)
+                },
+            },
+        }.WithAnalyzerDefaults();
+
+        await test.RunAsync();
+    }
+
+    [Fact]
     public async Task GenerateCustomHandler()
     {
         var code = DapperGenerator.RenderCustom("StructId", "UserId", "System.Ulid", "StringUlidHandler");

@@ -18,7 +18,6 @@
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Scriban" Version="5.12.1" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,8 +33,6 @@
     <!-- These would be added from the package-relative paths by the StructId.targets -->
     <StructId Include="..\StructId\*.cs" Link="StructId\%(Filename)%(Extension)" />
     <StructId Include="..\StructId\Templates\*.cs" Link="StructId\Templates\%(Filename)%(Extension)" />
-
-    <Analyzer Include="$(PkgScriban)/lib/netstandard2.0/Scriban.dll" Condition="Exists('$(PkgScriban)/lib/netstandard2.0/Scriban.dll')" />
   </ItemGroup>
 
   <Import Project="..\StructId.Package\StructId.targets" />
