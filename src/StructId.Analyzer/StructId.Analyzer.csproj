@@ -16,9 +16,9 @@
     <PackageReference Include="NuGetizer" Version="1.4.7" />
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="All" />
     <PackageReference Include="Scriban" Version="7.1.0" IncludeAssets="Build" Pack="false" />
-    <PackageReference Include="ThisAssembly.AssemblyInfo" Version="2.0.10" PrivateAssets="all" />
-    <PackageReference Include="ThisAssembly.Project" Version="2.0.10" PrivateAssets="all" />
-    <PackageReference Include="ThisAssembly.Resources" Version="2.0.10" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.AssemblyInfo" Version="2.1.2" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.Project" Version="2.1.2" PrivateAssets="all" />
+    <PackageReference Include="ThisAssembly.Resources" Version="2.1.2" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
