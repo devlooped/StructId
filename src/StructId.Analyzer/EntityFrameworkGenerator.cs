@@ -91,8 +91,7 @@ public class EntityFrameworkGenerator() : BaseGenerator(
         if (builtInEFTypes.Contains(model.ValueTypeFullName))
             return ThisAssembly.Resources.Templates.EntityFramework.Text;
 
-        if (model.ValueTypeAllInterfaces.Contains("System.IParsable<T>") &&
-            model.ValueTypeAllInterfaces.Contains("System.IFormattable"))
+        if (UsesStringProvider(model))
             return ThisAssembly.Resources.Templates.EntityFrameworkParsable.Text;
 
         return ThisAssembly.Resources.Templates.EntityFramework.Text;
@@ -108,8 +107,7 @@ public class EntityFrameworkGenerator() : BaseGenerator(
         var model = new SelectorModel(
             structIds.Select(x => new EFStructIdModel(x.TypeFullName,
                 !builtInEFTypes.Contains(x.ValueTypeFullName)
-                ? x.ValueTypeAllInterfaces.Contains("System.IParsable<T>") &&
-                  x.ValueTypeAllInterfaces.Contains("System.IFormattable")
+                ? UsesStringProvider(x)
                   ? "string" : x.ValueTypeFullName
                 : x.ValueTypeFullName)),
             customConverters.Select(x => new ConverterModel(x.TModel, x.TProvider, x.TConverter)),
@@ -125,6 +123,19 @@ public class EntityFrameworkGenerator() : BaseGenerator(
     record EFStructIdModel(string TSelf, string TValueType)
     {
         public string TValue => builtInTypesMap.TryGetValue(TValueType, out var value) ? value : TValueType;
+    }
+
+    static bool UsesStringProvider(StructIdModel model) =>
+        HasInterface(model, "System.IParsable") &&
+        HasInterface(model, "System.IFormattable");
+
+    static bool HasInterface(StructIdModel model, string interfaceType) =>
+        model.ValueTypeAllInterfaces.AsImmutableArray().Any(i => StripGenericArgs(i) == interfaceType);
+
+    static string StripGenericArgs(string name)
+    {
+        var idx = name.IndexOf('<');
+        return idx >= 0 ? name.Substring(0, idx) : name;
     }
 
     record ConverterModel(string TModel, string TProvider, string TConverter);
