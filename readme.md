@@ -6,6 +6,7 @@
 [![License](https://img.shields.io/github/license/devlooped/StructId.svg?color=blue)](https://github.com//devlooped/StructId/blob/main/license.txt)
 [![Build](https://github.com/devlooped/StructId/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/devlooped/StructId/actions)
 
+<!-- include https://github.com/devlooped/.github/raw/main/osmf.md -->
 <!-- #content -->
 An opinionated strongly-typed ID library that uses `readonly record struct` in C# for 
 maximum performance, minimal memory allocation typed identifiers.
