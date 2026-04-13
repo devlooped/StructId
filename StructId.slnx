@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="src/StructId.Analyzer/StructId.Analyzer.csproj" />
+  <Project Path="src/StructId.CodeFix/StructId.CodeFix.csproj" />
+  <Project Path="src/StructId.FunctionalTests/StructId.FunctionalTests.csproj" />
+  <Project Path="src/StructId.Package/StructId.Package.msbuildproj" Type="13b669be-bb05-4ddf-9536-439f39a36129" />
+  <Project Path="src/StructId.Tests/StructId.Tests.csproj" />
+  <Project Path="src/StructId/StructId.csproj" />
+</Solution>
