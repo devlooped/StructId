@@ -156,3 +156,8 @@
 	sha = 666a2a7c315f72199c418f11482a950fc69a8901
 	etag = 91ea15c07bfd784036c6ca931f5b2df7e9767b8367146d96c79caef09d63899f
 	weak
+[file ".github/copilot-instructions.md"]
+	url = https://github.com/devlooped/oss/blob/main/.github/copilot-instructions.md
+	sha = b9552b14bc75b7e1e03efbc3fb3519e80283dfa5
+	etag = 3a4d3034e7c2e8489e44b62b44ebb40f06b6400bf8cf633ebf99ab023fe38505
+	weak
