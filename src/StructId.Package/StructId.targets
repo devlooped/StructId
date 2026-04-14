@@ -18,7 +18,8 @@
   <!--
     Copies SKILL.md from this package to .github/skills/structid/ in the consuming repo root.
     Uses InitializeSourceControlInformation (SourceLink) to locate the repo root.
-    Silently skips if SourceLink is not configured or the repo root cannot be determined.
+    Falls back to SolutionDir if the git root cannot be determined.
+    Silently skips if the base directory cannot be determined.
     Opt-out: set <StructIdSkill>false</StructIdSkill> in your project or Directory.Build.props.
   -->
   <Target Name="CopyStructIdSkill"
@@ -32,6 +33,7 @@
 
     <PropertyGroup>
       <_StructIdSkillRepoRoot>@(_StructIdSkillSourceRoot)</_StructIdSkillRepoRoot>
+      <_StructIdSkillRepoRoot Condition="'$(_StructIdSkillRepoRoot)' == '' and '$(SolutionDir)' != '' and '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)</_StructIdSkillRepoRoot>
     </PropertyGroup>
 
     <Copy SourceFiles="$(MSBuildThisFileDirectory)..\skills\structid\SKILL.md"
