@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Scriban;
 
 namespace StructId;
@@ -139,7 +141,7 @@ public class DapperGenerator() : BaseGenerator(
             templatizedValues.Select(x => new ValueHandlerModelCode(x.ValueTypeFullName, x.AppliedTypeName, x.AppliedCode)));
 
         var output = template.Render(model, member => member.Name);
-        context.AddSource($"DapperExtensions.cs", output.Trim());
+        context.AddSource("DapperExtensions.cs", SourceText.From(output.Trim(), Encoding.UTF8));
     }
 
     public static string Render(string @namespace, string tself, string tvalue)
