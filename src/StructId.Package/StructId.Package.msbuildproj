@@ -19,5 +19,6 @@
     <Content Include="..\StructId\*.cs" BuildAction="Compile" CodeLanguage="cs" Pack="true" />
     <None Include="..\StructId\Templates\*.cs" PackFolder="$(PackFolder)\Templates" Visible="false" />
     <None Update="@(None)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\SKILL.md" Link="SKILL.md" PackagePath="skills/structid/SKILL.md" CopyToOutputDirectory="Never" />
   </ItemGroup>
 </Project>
