@@ -2,22 +2,11 @@
 ============
 
 [![Version](https://img.shields.io/nuget/vpre/StructId.svg?color=royalblue)](https://www.nuget.org/packages/StructId)
-[![Downloads](https://img.shields.io/nuget/dt/StructId.svg?color=green)](https://www.nuget.org/packages/StructId)
-[![License](https://img.shields.io/github/license/devlooped/StructId.svg?color=blue)](https://github.com//devlooped/StructId/blob/main/license.txt)
+[![Downloads](https://img.shields.io/nuget/dt/StructId.svg?color=darkmagenta)](https://www.nuget.org/packages/StructId)
+[![EULA](https://img.shields.io/badge/EULA-OSMF-blue?labelColor=black&color=C9FF30)](https://github.com/devlooped/oss/blob/main/osmfeula.txt)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/devlooped/oss/blob/main/license.txt)
 [![Build](https://github.com/devlooped/StructId/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/devlooped/StructId/actions)
 
-<!-- include https://github.com/devlooped/.github/raw/main/osmf.md -->
-## Open Source Maintenance Fee
-
-To ensure the long-term sustainability of this project, users of this package who generate 
-revenue must pay an [Open Source Maintenance Fee](https://opensourcemaintenancefee.org). 
-While the source code is freely available under the terms of the [License](license.txt), 
-this package and other aspects of the project require [adherence to the Maintenance Fee](osmfeula.txt).
-
-To pay the Maintenance Fee, [become a Sponsor](https://github.com/sponsors/devlooped) at the proper 
-OSMF tier. A single fee covers all of [Devlooped packages](https://www.nuget.org/profiles/Devlooped).
-
-<!-- https://github.com/devlooped/.github/raw/main/osmf.md -->
 <!-- #content -->
 An opinionated strongly-typed ID library that uses `readonly record struct` in C# for 
 maximum performance, minimal memory allocation typed identifiers.
@@ -375,6 +364,19 @@ The versioning scheme for packages is:
 
 - PR builds: *42.42.42-pr*`[NUMBER]`
 - Branch builds: *42.42.42-*`[BRANCH]`.`[COMMITS]`
+
+<!-- include https://github.com/devlooped/.github/raw/main/osmf.md -->
+## Open Source Maintenance Fee
+
+To ensure the long-term sustainability of this project, users of this package who generate 
+revenue must pay an [Open Source Maintenance Fee](https://opensourcemaintenancefee.org). 
+While the source code is freely available under the terms of the [License](license.txt), 
+this package and other aspects of the project require [adherence to the Maintenance Fee](osmfeula.txt).
+
+To pay the Maintenance Fee, [become a Sponsor](https://github.com/sponsors/devlooped) at the proper 
+OSMF tier. A single fee covers all of [Devlooped packages](https://www.nuget.org/profiles/Devlooped).
+
+<!-- https://github.com/devlooped/.github/raw/main/osmf.md -->
 
 <!-- include https://github.com/devlooped/sponsors/raw/main/footer.md -->
 # Sponsors 
