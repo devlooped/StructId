@@ -158,6 +158,6 @@
 	weak
 [file ".github/copilot-instructions.md"]
 	url = https://github.com/devlooped/oss/blob/main/.github/copilot-instructions.md
-	sha = b9552b14bc75b7e1e03efbc3fb3519e80283dfa5
-	etag = 3a4d3034e7c2e8489e44b62b44ebb40f06b6400bf8cf633ebf99ab023fe38505
+	sha = e616d89d9537c4b8ccf1c20dd277ab82104167c4
+	etag = 6ee650d118a57494d3545d54718ccaa5257b09d54504e9c21514fe596edd9678
 	weak

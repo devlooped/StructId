@@ -85,3 +85,10 @@ Custom xUnit attributes are sometimes used for conditional test execution:
 - All PRs must pass format validation
 - Tests must pass on all target frameworks
 - Follow existing patterns and conventions in the codebase
+
+## Documenting Work
+
+Project implemention details, design and key decisions should be documented in a top-level AGENTS.md file at the repo root. 
+Keep this file updated whenever you make change significant changes for future reference.
+
+User-facing features and APIs should be documented to highlight (not extensively, as an overview) key project features and capabilities, in the readme.md file at the repo root.
