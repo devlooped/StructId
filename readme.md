@@ -354,7 +354,7 @@ line with `public static TSelf New() => new(Ulid.NewUlid());` as valid.
 # Dogfooding
 
 [![CI Version](https://img.shields.io/endpoint?url=https://shields.kzu.app/vpre/StructId/main&label=nuget.ci&color=brightgreen)](https://pkg.kzu.app/index.json)
-[![Build](https://github.com/devlooped/StructId/workflows/build/badge.svg?branch=main)](https://github.com/devlooped/StructId/actions)
+[![Build](https://github.com/devlooped/StructId/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/devlooped/StructId/actions)
 
 We also produce CI packages from branches and pull requests so you can dogfood builds as quickly as they are produced. 
 
