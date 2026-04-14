@@ -1,5 +1,39 @@
 # Changelog
 
+## [v1.1.0](https://github.com/devlooped/StructId/tree/v1.1.0) (2026-04-14)
+
+[Full Changelog](https://github.com/devlooped/StructId/compare/v1.0.0-rc...v1.1.0)
+
+:sparkles: Implemented enhancements:
+
+- All StructId generators are not incremental and extremely inefficient \(analyzers too\) [\#60](https://github.com/devlooped/StructId/issues/60)
+- Trim package dependencies significantly [\#89](https://github.com/devlooped/StructId/pull/89) (@kzu)
+- Fix incremental source generation and add incrementality tests [\#82](https://github.com/devlooped/StructId/pull/82) (@kzu)
+- Improve record analyzer performance [\#61](https://github.com/devlooped/StructId/pull/61) (@kzu)
+
+:bug: Fixed bugs:
+
+- CA1813 [\#80](https://github.com/devlooped/StructId/issues/80)
+- Having some issues with IStructId\<char\> [\#79](https://github.com/devlooped/StructId/issues/79)
+- Template TSelf contraint does not seem to work [\#75](https://github.com/devlooped/StructId/issues/75)
+- Fix Analyser warning [\#72](https://github.com/devlooped/StructId/issues/72)
+- Fix Dapper generator encoding issue on macOS [\#94](https://github.com/devlooped/StructId/pull/94) (@kzu)
+
+:hammer: Other:
+
+- Filter which templates are applied [\#81](https://github.com/devlooped/StructId/issues/81)
+- Switch to ByteAether.Ulid for faster, always‑reliable ULID generation [\#78](https://github.com/devlooped/StructId/issues/78)
+- Value Validator feature request [\#77](https://github.com/devlooped/StructId/issues/77)
+- Opt out of implicit operators [\#74](https://github.com/devlooped/StructId/issues/74)
+- Template question [\#73](https://github.com/devlooped/StructId/issues/73)
+- :\) [\#59](https://github.com/devlooped/StructId/issues/59)
+
+:twisted_rightwards_arrows: Merged:
+
+- Target latest .NET LTS from tests [\#90](https://github.com/devlooped/StructId/pull/90) (@kzu)
+- Adopt OSMF [\#87](https://github.com/devlooped/StructId/pull/87) (@kzu)
+- Provide some additional package tags for discoverability [\#58](https://github.com/devlooped/StructId/pull/58) (@kzu)
+
 ## [v1.0.0-rc](https://github.com/devlooped/StructId/tree/v1.0.0-rc) (2024-12-23)
 
 [Full Changelog](https://github.com/devlooped/StructId/compare/v1.0.0...v1.0.0-rc)
