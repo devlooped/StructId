@@ -135,8 +135,8 @@ public readonly partial record struct ProductId : IStructId<Ulid>;
 public record Product(ProductId Id, string Name);
 
 // Create a new product with a new Ulid-based id
-var productId = Ulid.NewUlid();
-var product = new Product(new ProductId(productId), "Product");
+var productId = ProductId.New(); // 👈 equivalent to: new ProductId(Ulid.NewUlid())
+var product = new Product(productId, "Product");
 
 // Seed data
 connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", new Product(ProductId.New(), "Product1"));

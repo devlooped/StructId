@@ -123,8 +123,8 @@ public class UlidTests
         connection.Open();
 
         // Seed data
-        var productId = Ulid.NewUlid();
-        var product = new UlidProduct(new UlidId(productId), "Product");
+        var productId = UlidId.New();
+        var product = new UlidProduct(productId, "Product");
 
         connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", new UlidProduct(UlidId.New(), "Product1"));
         connection.Execute("INSERT INTO Products (Id, Name) VALUES (@Id, @Name)", product);
