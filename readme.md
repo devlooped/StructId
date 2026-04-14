@@ -191,7 +191,7 @@ by providing an interface for them, which applies to all `Guid`-based IDs:
 ```csharp
 public interface IId
 {
-    public Guid Id { get; }
+    Guid Id { get; }
 }
 ```
 
