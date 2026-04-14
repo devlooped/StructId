@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 
@@ -13,13 +11,6 @@ public class DapperGeneratorTests(ITestOutputHelper output)
     {
         var test = new StructIdGeneratorTest<DapperGenerator>("UserId", "int")
         {
-            SolutionTransforms =
-            {
-                (solution, projectId) => solution
-                    .GetProject(projectId)?
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Dapper.DbString).Assembly.ManifestModule.FullyQualifiedName))
-                    .Solution ?? solution
-            },
             TestState =
             {
                 Sources =
@@ -37,7 +28,8 @@ public class DapperGeneratorTests(ITestOutputHelper output)
                     Encoding.UTF8)
                 },
             },
-        }.WithAnalyzerDefaults();
+        }.WithAnalyzerDefaults()
+            .WithReferencePackages(new PackageIdentity("Dapper", "2.1.35"));
 
         await test.RunAsync();
     }
@@ -47,13 +39,6 @@ public class DapperGeneratorTests(ITestOutputHelper output)
     {
         var test = new StructIdGeneratorTest<DapperGenerator>("UserId", "string")
         {
-            SolutionTransforms =
-            {
-                (solution, projectId) => solution
-                    .GetProject(projectId)?
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Dapper.DbString).Assembly.ManifestModule.FullyQualifiedName))
-                    .Solution ?? solution
-            },
             TestState =
             {
                 Sources =
@@ -71,7 +56,8 @@ public class DapperGeneratorTests(ITestOutputHelper output)
                     Encoding.UTF8)
                 },
             },
-        }.WithAnalyzerDefaults();
+        }.WithAnalyzerDefaults()
+            .WithReferencePackages(new PackageIdentity("Dapper", "2.1.35"));
 
         await test.RunAsync();
     }
@@ -83,14 +69,6 @@ public class DapperGeneratorTests(ITestOutputHelper output)
 
         var test = new StructIdGeneratorTest<DapperGenerator>("UserId", "System.Ulid")
         {
-            SolutionTransforms =
-            {
-                (solution, projectId) => solution
-                    .GetProject(projectId)?
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Dapper.DbString).Assembly.Location))
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Ulid).Assembly.Location))
-                    .Solution ?? solution
-            },
             TestState =
             {
                 Sources =
@@ -127,7 +105,10 @@ public class DapperGeneratorTests(ITestOutputHelper output)
                     (typeof(DapperGenerator), "DapperExtensions.cs", code, Encoding.UTF8)
                 },
             },
-        }.WithAnalyzerDefaults();
+        }.WithAnalyzerDefaults()
+            .WithReferencePackages(
+                new PackageIdentity("Dapper", "2.1.72"),
+                new PackageIdentity("Ulid", "1.4.1"));
 
         await test.RunAsync();
     }
@@ -151,14 +132,6 @@ public class DapperGeneratorTests(ITestOutputHelper output)
 
         var test = new StructIdGeneratorTest<DapperGenerator>("UserId", "System.Ulid")
         {
-            SolutionTransforms =
-            {
-                (solution, projectId) => solution
-                    .GetProject(projectId)?
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Dapper.DbString).Assembly.Location))
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Ulid).Assembly.Location))
-                    .Solution ?? solution
-            },
             TestState =
             {
                 Sources =
@@ -176,7 +149,10 @@ public class DapperGeneratorTests(ITestOutputHelper output)
                     (typeof(DapperGenerator), "DapperExtensions.cs", code, Encoding.UTF8)
                 },
             },
-        }.WithAnalyzerDefaults();
+        }.WithAnalyzerDefaults()
+            .WithReferencePackages(
+                new PackageIdentity("Dapper", "2.1.72"),
+                new PackageIdentity("Ulid", "1.4.1"));
 
         await test.RunAsync();
     }
@@ -187,13 +163,6 @@ public class DapperGeneratorTests(ITestOutputHelper output)
         var test = new CSharpSourceGeneratorTest<DapperGenerator, DefaultVerifier>
         {
             ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
-            SolutionTransforms =
-            {
-                (solution, projectId) => solution
-                    .GetProject(projectId)?
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(Dapper.DbString).Assembly.ManifestModule.FullyQualifiedName))
-                    .Solution ?? solution
-            },
             TestState =
             {
                 Sources =
@@ -208,7 +177,8 @@ public class DapperGeneratorTests(ITestOutputHelper output)
                     """,
                 },
             },
-        }.WithAnalyzerDefaults();
+        }.WithAnalyzerDefaults()
+            .WithReferencePackages(new PackageIdentity("Dapper", "2.1.35"));
 
         await test.RunAsync();
     }

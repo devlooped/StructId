@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -45,6 +46,18 @@ public static partial class StructIdExtensions
         AddSourceIfNotExists(test.TestState.Sources, "INewableT.cs", ThisAssembly.Resources.StructId.INewableT.Text);
         AddSourceIfNotExists(test.TestState.Sources, "TStructIdAttribute.cs", ThisAssembly.Resources.StructId.TStructIdAttribute.Text);
         AddSourceIfNotExists(test.TestState.Sources, "TValueAttribute.cs", ThisAssembly.Resources.StructId.TValueAttribute.Text);
+
+        return test;
+    }
+
+    public static TTest WithReferencePackages<TTest>(this TTest test, params PackageIdentity[] packages)
+        where TTest : AnalyzerTest<DefaultVerifier>
+    {
+        if (packages.Length == 0)
+            return test;
+
+        test.ReferenceAssemblies = (test.ReferenceAssemblies ?? ReferenceAssemblies.Default)
+            .AddPackages(packages.ToImmutableArray());
 
         return test;
     }
