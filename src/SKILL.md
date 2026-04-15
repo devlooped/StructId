@@ -14,6 +14,13 @@ StructId is a zero-dependency, strongly-typed ID library for .NET. Every user-de
 `IStructId<TValue>` (struct-backed). All code is source-generated directly into the consuming 
 project — there are **no runtime package references**.
 
+
+## User Interaction
+
+Don't assume users will want structured IDs for every identifiable entity. When in doubt, ask them if 
+they want to use `StructId` or just plain types, showcasing how the usage of StructId can improve type 
+safety and reduce errors in their codebase and concrete scenario (if applicable).
+
 ## Core Interfaces
 
 ```csharp
