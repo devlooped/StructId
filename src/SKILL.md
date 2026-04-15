@@ -17,6 +17,8 @@ project — there are **no runtime package references**.
 ## Core Interfaces
 
 ```csharp
+using StructId;
+
 // String-backed ID
 public readonly partial record struct ProductId : IStructId;
 
@@ -28,6 +30,8 @@ public readonly partial record struct OrderId : IStructId<int>;
 ### `IStructId` (string value)
 
 ```csharp
+namespace StructId;
+
 public partial interface IStructId
 {
     string Value { get; }
@@ -37,6 +41,8 @@ public partial interface IStructId
 ### `IStructId<TValue>` (struct value)
 
 ```csharp
+namespace StructId;
+
 public partial interface IStructId<TValue> where TValue : struct
 {
     TValue Value { get; }
@@ -48,6 +54,8 @@ public partial interface IStructId<TValue> where TValue : struct
 Static interface members for consistent factory methods:
 
 ```csharp
+namespace StructId;
+
 public interface INewable<TSelf>
 {
     static abstract TSelf New(string value);
@@ -72,6 +80,8 @@ T CreateId<T, V>(V value) where T : INewable<T, V> => T.New(value);
 The minimum declaration is a `readonly partial record struct` implementing one of the core interfaces:
 
 ```csharp
+using StructId;
+
 public readonly partial record struct UserId : IStructId<Guid>;
 public readonly partial record struct ProductId : IStructId;       // string-backed
 public readonly partial record struct OrderId : IStructId<int>;
@@ -85,6 +95,8 @@ public readonly partial record struct TraceId : IStructId<Ulid>;   // Ulid suppo
 - If you declare a primary constructor, it must have a single parameter named `Value`
 
 ```csharp
+using StructId;
+
 // Custom primary constructor (e.g. to add attributes)
 public readonly partial record struct ProductId([property: JsonPropertyName("id")] int Value) : IStructId<int>;
 ```
@@ -195,6 +207,8 @@ or members. Templates are regular C# files in your project.
 **Apply to all struct IDs (any value type):**
 
 ```csharp
+using StructId;
+
 [TStructId]
 file partial record struct TSelf(TValue Value)
 {
@@ -208,6 +222,8 @@ file record struct TValue;  // empty = match any value type
 **Apply only to string-backed IDs:**
 
 ```csharp
+using StructId;
+
 [TStructId]
 file partial record struct TSelf(string Value)
 {
@@ -219,6 +235,8 @@ file partial record struct TSelf(string Value)
 **Apply only to Guid-backed IDs:**
 
 ```csharp
+using StructId;
+
 [TStructId]
 file partial record struct TSelf(Guid Value) : IMyGuidId
 {
@@ -229,6 +247,8 @@ file partial record struct TSelf(Guid Value) : IMyGuidId
 **Apply to IDs whose value type implements a specific interface:**
 
 ```csharp
+using StructId;
+
 [TStructId]
 file partial record struct TSelf(TValue Value) : IComparable<TSelf>
 {
@@ -250,6 +270,8 @@ file record struct TValue : IComparable<TValue>
 **Exclude string from TValue matching:**
 
 ```csharp
+using StructId;
+
 // /*!string*/ inline comment excludes string-backed IDs
 [TStructId]
 file partial record struct TSelf(/*!string*/ TValue Value)
@@ -263,6 +285,8 @@ file record struct TValue;
 **Add TSelf interface constraint (additional filtering):**
 
 ```csharp
+using StructId;
+
 [TStructId]
 file partial record struct TSelf(Ulid Value)
 {
@@ -293,6 +317,8 @@ For a struct ID `PersonId : IStructId<Guid>` and a template applying to `Guid`-b
 To generate unique helper type names per struct ID, use the `TSelf_` or `TValue_` prefix:
 
 ```csharp
+using StructId;
+
 [TStructId]
 file partial record struct TSelf(TValue Value)
 {
@@ -308,6 +334,8 @@ file record struct TValue;
 For custom Dapper handlers or EF Core converters for a specific value type, use `[TValue]`:
 
 ```csharp
+using StructId;
+
 [TValue]
 file class TValue_Handler : SqlMapper.TypeHandler<TValue>
 {
@@ -363,6 +391,8 @@ No attribute, configuration, or code change is needed — just add the NuGet ref
 ### Entity with typed ID in EF Core
 
 ```csharp
+using StructId;
+
 public readonly partial record struct UserId : IStructId<Guid>;
 
 public class User
@@ -391,6 +421,8 @@ var options = new DbContextOptionsBuilder<AppDbContext>()
 ### Dapper query with struct ID
 
 ```csharp
+using StructId;
+
 public readonly partial record struct ProductId : IStructId<int>;
 
 using var connection = new SqliteConnection("Data Source=app.db");
@@ -405,6 +437,8 @@ var product = connection.QueryFirst<Product>(
 ### Generic repository using INewable
 
 ```csharp
+using StructId;
+
 public class Repository<TEntity, TId, TValue>
     where TId : struct, IStructId<TValue>, INewable<TId, TValue>
     where TValue : struct
