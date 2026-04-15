@@ -1,5 +1,23 @@
 # Changelog
 
+## [v1.1.1](https://github.com/devlooped/StructId/tree/v1.1.1) (2026-04-15)
+
+[Full Changelog](https://github.com/devlooped/StructId/compare/v1.1.0...v1.1.1)
+
+:sparkles: Implemented enhancements:
+
+- Update Guid-backed ID factory to use CreateVersion7 on .NET 9+ [\#106](https://github.com/devlooped/StructId/pull/106) (@kzu)
+- Add SKILL.md and auto-copy to consuming repos [\#99](https://github.com/devlooped/StructId/pull/99) (@kzu)
+
+:hammer: Other:
+
+- Create comprehensive project design and implementation documentation in AGENTS.md [\#97](https://github.com/devlooped/StructId/issues/97)
+
+:twisted_rightwards_arrows: Merged:
+
+- Fallback to SolutionDir when git root is unavailable for skill copy [\#100](https://github.com/devlooped/StructId/pull/100) (@Copilot)
+- Add comprehensive AGENTS.md implementation reference [\#98](https://github.com/devlooped/StructId/pull/98) (@Copilot)
+
 ## [v1.1.0](https://github.com/devlooped/StructId/tree/v1.1.0) (2026-04-14)
 
 [Full Changelog](https://github.com/devlooped/StructId/compare/v1.0.0-rc...v1.1.0)
