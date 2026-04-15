@@ -6,8 +6,13 @@ using StructId;
 [TStructId]
 file partial record struct TSelf(Guid Value)
 {
-    /// <summary>
-    /// Creates a new instance of <typeparamref name="TSelf"/> with a <see cref="Guid.NewGuid"/>.
-    /// </summary>
-    public static TSelf New() => new(Guid.NewGuid());
+    /// <summary>Creates a new instance with a newly generated <see cref="Guid"/>.</summary>
+    public static TSelf New()
+    {
+#if NET9_0_OR_GREATER
+        return new(Guid.CreateVersion7());
+#else
+        return new(Guid.NewGuid());
+#endif
+    }
 }
