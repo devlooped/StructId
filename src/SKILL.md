@@ -100,13 +100,14 @@ For every struct ID, the source generator emits:
 - Implicit/explicit conversion operators to/from `TValue`
 - `INewable<TSelf>` / `INewable<TSelf, TValue>` implementation
 - `New(TValue value)` static factory method
-- `New()` (parameterless) for `Guid`- and `Ulid`-backed IDs, using `Guid.NewGuid()` / `Ulid.NewUlid()`
+- `New()` (parameterless) for `Guid`- and `Ulid`-backed IDs, using `Guid.CreateVersion7()` on .NET 9+ or `Guid.NewGuid()` on earlier targets / `Ulid.NewUlid()`
 
 ## Factory Methods
 
 ```csharp
 // Guid-backed: parameterless New() generates a new GUID
-var userId  = UserId.New();              // new UserId(Guid.NewGuid())
+// On .NET 9+, uses Guid.CreateVersion7(); earlier targets use Guid.NewGuid()
+var userId  = UserId.New();              // new UserId(Guid.CreateVersion7()) on .NET 9+
 var userId2 = UserId.New(someGuid);      // new UserId(someGuid)
 
 // Ulid-backed: parameterless New() generates a new ULID
