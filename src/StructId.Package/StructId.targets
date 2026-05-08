@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <!--
-    Copies SKILL.md from this package to .github/skills/structid/ in the consuming repo root.
+    Copies SKILL.md from this package to .agents/skills/structid/ in the consuming repo root.
     Uses InitializeSourceControlInformation (SourceLink) to locate the repo root.
     Falls back to SolutionDir if the git root cannot be determined.
     Silently skips if the base directory cannot be determined.
@@ -37,7 +37,7 @@
     </PropertyGroup>
 
     <Copy SourceFiles="$(MSBuildThisFileDirectory)..\skills\structid\SKILL.md"
-          DestinationFiles="$(_StructIdSkillRepoRoot).github\skills\structid\SKILL.md"
+          DestinationFiles="$(_StructIdSkillRepoRoot).agents\skills\structid\SKILL.md"
           SkipUnchangedFiles="true"
           Condition="'$(_StructIdSkillRepoRoot)' != '' and Exists('$(MSBuildThisFileDirectory)..\skills\structid\SKILL.md')"
           ContinueOnError="true" />
