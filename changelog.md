@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.1.4](https://github.com/devlooped/StructId/tree/v1.1.4) (2026-05-14)
+
+[Full Changelog](https://github.com/devlooped/StructId/compare/v1.1.3...v1.1.4)
+
+:twisted_rightwards_arrows: Merged:
+
+- Improve CopyStructIdSkill MSBuild target [\#119](https://github.com/devlooped/StructId/pull/119) (@kzu)
+- Route copied StructId skill files to `.agents/skills` [\#113](https://github.com/devlooped/StructId/pull/113) (@Copilot)
+
 ## [v1.1.3](https://github.com/devlooped/StructId/tree/v1.1.3) (2026-04-15)
 
 [Full Changelog](https://github.com/devlooped/StructId/compare/v1.1.2...v1.1.3)
