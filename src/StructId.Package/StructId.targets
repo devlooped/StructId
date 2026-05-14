@@ -19,11 +19,12 @@
     Copies SKILL.md from this package to .agents/skills/structid/ in the consuming repo root.
     Uses InitializeSourceControlInformation (SourceLink) to locate the repo root.
     Falls back to SolutionDir if the git root cannot be determined.
+    Falls back to the directory containing the nearest AGENTS.md file found above the project file.
     Silently skips if the base directory cannot be determined.
     Opt-out: set <StructIdSkill>false</StructIdSkill> in your project or Directory.Build.props.
   -->
   <Target Name="CopyStructIdSkill"
-          AfterTargets="Build"
+          BeforeTargets="PrepareForBuild"
           DependsOnTargets="InitializeSourceControlInformation"
           Condition="'$(StructIdSkill)' != 'false'">
 
@@ -34,7 +35,13 @@
     <PropertyGroup>
       <_StructIdSkillRepoRoot>@(_StructIdSkillSourceRoot)</_StructIdSkillRepoRoot>
       <_StructIdSkillRepoRoot Condition="'$(_StructIdSkillRepoRoot)' == '' and '$(SolutionDir)' != '' and '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)</_StructIdSkillRepoRoot>
+      <_StructIdSkillAgentsMd Condition="'$(_StructIdSkillRepoRoot)' == ''">$([MSBuild]::GetPathOfFileAbove('AGENTS.md', '$(MSBuildProjectDirectory)'))</_StructIdSkillAgentsMd>
+      <_StructIdSkillRepoRoot Condition="'$(_StructIdSkillRepoRoot)' == '' and '$(_StructIdSkillAgentsMd)' != ''">$([System.IO.Path]::GetDirectoryName('$(_StructIdSkillAgentsMd)'))\</_StructIdSkillRepoRoot>
     </PropertyGroup>
+
+    <MakeDir Directories="$(_StructIdSkillRepoRoot).agents\skills\structid"
+             Condition="'$(_StructIdSkillRepoRoot)' != '' and Exists('$(MSBuildThisFileDirectory)..\skills\structid\SKILL.md')"
+             ContinueOnError="true" />
 
     <Copy SourceFiles="$(MSBuildThisFileDirectory)..\skills\structid\SKILL.md"
           DestinationFiles="$(_StructIdSkillRepoRoot).agents\skills\structid\SKILL.md"
