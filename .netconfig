@@ -80,9 +80,9 @@
 	weak
 [file ".gitignore"]
 	url = https://github.com/devlooped/oss/blob/main/.gitignore
-	sha = a225b7a9f609f26bcc24e0d84f663387be251a7d
+	sha = ff61659751374b95c7a8a0477c908a8119f756f0
 
-	etag = 09b499201361a59fad0036e925f4008cdd7bdc6723ba37ff18cc509e6024b2bf
+	etag = e5865f083db45081a7b4eaa518018971b34e6ef93f917ac510dea96d27f792b3
 	weak
 [file "Directory.Build.rsp"]
 	url = https://github.com/devlooped/oss/blob/main/Directory.Build.rsp
@@ -107,15 +107,15 @@
 	weak
 [file "src/Directory.Build.props"]
 	url = https://github.com/devlooped/oss/blob/main/src/Directory.Build.props
-	sha = dd13ed3334135c30dcb1e3b2295dc7622de298d9
+	sha = 6e2438919e108aeb75106dc0737c45f5e55d5f42
 
-	etag = b2b90c6d617db9712cc8be2031b767d3ba951015717984f52b4872cc39f93e72
+	etag = f1d6384abf18d8d891ce5e835a10c73fe029c42151374be96d7e4af43d189c65
 	weak
 [file "src/Directory.Build.targets"]
 	url = https://github.com/devlooped/oss/blob/main/src/Directory.Build.targets
-	sha = 083a37bd9307ec820bac6ee3c7384083151d36d8
+	sha = c67952501337303eda0fb8b340cb7606666abd8f
 
-	etag = 907682e5632a2ba430357e6e042a4ca33cb8c94a3a215d3091aa03f5958a4877
+	etag = cb83faed0cc8b930a7b6bdc61bea03a54059858cf04353e55fee94d9e3ae0fad
 	weak
 [file "src/Sample/MinimalApi/Ipsum.cs"]
 	url = https://github.com/devlooped/catbag/blob/main/System/Ipsum.cs
